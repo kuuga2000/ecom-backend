@@ -1,0 +1,16 @@
+services:
+  backend:
+    build: .
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ecommerce
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+    ports:
+      - "${APP_PORT:-8081}:8080"
+    networks:
+      - existing-database
+
+networks:
+  existing-database:
+    external: true
+    name: ${DB_DOCKER_NETWORK:-graphql-slardar_default}

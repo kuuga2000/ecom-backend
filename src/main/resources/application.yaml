@@ -1,0 +1,11 @@
+spring:
+  application:
+    name: ecom-backend
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://postgres:5432/ecommerce}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
