@@ -8,7 +8,9 @@ Step-by-step walkthroughs:
 - [`book/02-milestone-2-product-search-and-pagination.md`](book/02-milestone-2-product-search-and-pagination.md)
 - [`book/03-milestone-3-categories-and-product-variants.md`](book/03-milestone-3-categories-and-product-variants.md)
 
-Current endpoint and payload reference: [`api-docs/products-api.md`](api-docs/products-api.md).
+API references: [product reads](api-docs/products-api.md) and [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md).
+
+Docker commands and troubleshooting: [Docker guide](docker-docs/README.md).
 
 ## Proposed backend shape
 
@@ -68,7 +70,7 @@ postgresql://postgres:postgres@postgres:5432/ecommerce
 
 `postgres` is Docker's service DNS name and resolves because the backend joins the database's existing Docker network. Override `DB_DOCKER_NETWORK` if that network is renamed.
 
-To use another PostgreSQL database (including Supabase), create `.env` from `.env.example` and change these values before starting Compose:
+To use another PostgreSQL database with the isolated `compose.yaml`, create `.env` from `.env.example` and change these values before starting Compose. The `compose.existing-db.yaml` file hardcodes its database connection; edit that file for a different external database:
 
 ```bash
 DB_URL=jdbc:postgresql://postgres:5432/ecommerce

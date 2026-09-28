@@ -1,6 +1,6 @@
 # Products API
 
-This document describes every endpoint currently implemented by the ecommerce backend after Week 1 categories and variants.
+This document covers the product read API and its Milestone 2 response examples. For the current category, variant, and product write contract, see [Categories and product variants API](03-categories-and-product-variants-api.md).
 
 ## General information
 
@@ -24,7 +24,7 @@ Content-Type: application/problem+json
 
 All monetary amounts are JSON numbers with two decimal places in the database. Timestamps are ISO 8601 strings with a UTC offset.
 
-## Product object
+## Product list item
 
 | Field | Type | Nullable | Description |
 | --- | --- | --- | --- |
@@ -40,7 +40,7 @@ All monetary amounts are JSON numbers with two decimal places in the database. T
 | `createdAt` | string | No | ISO 8601 creation timestamp |
 | `updatedAt` | string | No | ISO 8601 last-update timestamp |
 
-Example:
+Example list item (product detail also includes `category`, `defaultVariantId`, and `variants`):
 
 ```json
 {
@@ -77,6 +77,8 @@ This endpoint has no request body. Its input payload consists of optional query 
 | `size` | integer | No | `20` | Must be between `1` and `100` inclusive |
 | `categoryId` | integer | No | No filter | Positive category ID |
 | `sort` | string | No | `name,asc` | Format: `field,direction`; fields: `name`, `price`; directions: `asc`, `desc` |
+
+Search counts distinct products even if multiple variant SKUs match. Price sorting uses the default variant price. An unknown positive `categoryId` returns an empty page.
 
 The sort direction may be omitted, in which case it defaults to ascending:
 
@@ -396,7 +398,7 @@ Request:
 curl --fail-with-body 'http://localhost:8081/api/products/1'
 ```
 
-Response:
+Response excerpt (the actual detail response also includes `category`, `defaultVariantId`, and `variants`):
 
 ```json
 {
@@ -441,69 +443,9 @@ Response:
 }
 ```
 
-## Endpoint summary
+## Product read endpoint summary
 
 | Method | Path | Request body | Success | Errors |
 | --- | --- | --- | --- | --- |
 | `GET` | `/api/products` | None | `200` product page | `400` invalid query parameter |
-| `GET` | `/api/products/{id}` | None | `200` product | `404` product not found |
-
-
-
-## Week 1 categories and variants
-
-The parent `products` row owns catalog metadata, currency, and the existing product-level inventory count. `categories` has a stable, immutable slug. `product_variants` owns SKU, price, active status, and options. V4 copies every preexisting product SKU and price into one default variant, and assigns those products to the `uncategorized` category. Existing product IDs, SKUs, prices, and legacy list fields remain intact. The product-level `sku` and `price` response fields always come from `defaultVariantId`; they are never stored twice. Price sorting also uses the default variant price, including for products with several variants. List responses keep their original shape. Detail responses add `category`, `defaultVariantId`, and `variants`.
-
-Option selections are arrays of `{ "name": "Color", "value": "Red" }`. Names and values are trimmed and lowercased, then sorted by name before storage and combination comparison. For example, `Color=Red, Size=M` equals `size=m, color=red`. Use `[]` only for a variant without options. A product cannot have two variants with the same normalized combination. SKU uniqueness is global and case-sensitive; SKU values are trimmed when written.
-
-### Endpoints
-
-| Method | Path | Use |
-| --- | --- | --- |
-| GET | `/api/categories` | List categories, ordered by ID |
-| GET | `/api/categories/{id}` | Get one category |
-| POST | `/api/categories` | Create with `slug` and `name` |
-| PUT | `/api/categories/{id}` | Update display `name`; slug is immutable |
-| GET | `/api/products?categoryId=2&q=tee&page=0&size=20&sort=price,asc` | Filter and search distinct products |
-| POST | `/api/products` | Create metadata and one legacy `sku`/`price` pair, or a `variants` array |
-| PUT | `/api/products/{id}` | Update metadata and optionally the default variant's `sku` and `price` |
-| POST | `/api/products/{id}/variants` | Add a variant |
-| PUT | `/api/products/{id}/variants/{variantId}` | Update a variant |
-
-Product create and update require `name`, `description`, `currency`, `inventoryQuantity`, `active`, and `categoryId`; `imageUrl` is optional. Create accepts either `sku` plus `price` for one optionless default variant, or `variants` and an optional zero-based `defaultVariantIndex` (defaults to 0). A variant requires `sku`, `price`, `active`, and `options`. Product update changes metadata and may update the existing default variant via `sku` plus `price`; update variants via their own endpoint. Slugs are lowercase letters, numbers, and hyphens. Unknown product, category, or variant IDs return 404. Invalid bodies return 400; existing SKU, slug, or option combination returns 409. Errors use `application/problem+json`.
-
-### Simple product
-
-```bash
-curl -X POST http://localhost:8081/api/categories -H 'Content-Type: application/json' \
-  -d '{"slug":"apparel","name":"Apparel"}'
-curl -X POST http://localhost:8081/api/products -H 'Content-Type: application/json' \
-  -d '{"name":"Cap","description":"Cotton cap","currency":"USD","inventoryQuantity":10,"active":true,"categoryId":2,"sku":"CAP-001","price":15.00}'
-```
-
-```json
-{"id":4,"name":"Cap","sku":"CAP-001","description":"Cotton cap","price":15.00,"currency":"USD","imageUrl":null,"inventoryQuantity":10,"active":true,"createdAt":"2026-09-29T00:00:00Z","updatedAt":"2026-09-29T00:00:00Z","category":{"id":2,"slug":"apparel","name":"Apparel"},"defaultVariantId":4,"variants":[{"id":4,"sku":"CAP-001","price":15.00,"active":true,"options":[]}]}
-```
-
-### Red/Blue and S/M variants
-
-```bash
-curl -X POST http://localhost:8081/api/products -H 'Content-Type: application/json' \
-  -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"defaultVariantIndex":0,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
-```
-
-```json
-{"id":5,"name":"Tee","sku":"TEE-RED-S","description":"Cotton tee","price":20.00,"currency":"USD","imageUrl":null,"inventoryQuantity":20,"active":true,"createdAt":"2026-09-29T00:00:00Z","updatedAt":"2026-09-29T00:00:00Z","category":{"id":2,"slug":"apparel","name":"Apparel"},"defaultVariantId":5,"variants":[{"id":5,"sku":"TEE-RED-S","price":20.00,"active":true,"options":[{"name":"color","value":"red"},{"name":"size","value":"s"}]},{"id":6,"sku":"TEE-RED-M","price":20.00,"active":true,"options":[{"name":"color","value":"red"},{"name":"size","value":"m"}]},{"id":7,"sku":"TEE-BLUE-S","price":22.00,"active":true,"options":[{"name":"color","value":"blue"},{"name":"size","value":"s"}]},{"id":8,"sku":"TEE-BLUE-M","price":22.00,"active":true,"options":[{"name":"color","value":"blue"},{"name":"size","value":"m"}]}]}
-```
-
-### Category-filtered search
-
-```bash
-curl 'http://localhost:8081/api/products?categoryId=2&q=blue&page=0&size=10&sort=price,asc'
-```
-
-```json
-{"items":[{"id":5,"name":"Tee","sku":"TEE-RED-S","description":"Cotton tee","price":20.00,"currency":"USD","imageUrl":null,"inventoryQuantity":20,"active":true,"createdAt":"2026-09-29T00:00:00Z","updatedAt":"2026-09-29T00:00:00Z"}],"page":0,"size":10,"totalCount":1}
-```
-
-The example IDs and timestamps above assume a fresh database and are illustrative. The legacy product-level `inventoryQuantity` is still shared by all variants; per-variant inventory is outside Week 1.
+| `GET` | `/api/products/{id}` | None | `200` product detail with category and variants | `404` product not found |
