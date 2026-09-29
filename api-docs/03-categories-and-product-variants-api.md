@@ -360,4 +360,4 @@ Example unknown category on product creation:
 
 ## Current limit
 
-V5 moves the previous product quantity to its default variant and starts any other existing variants at `0`, because their historical distribution is unknown. New and updated variants have independent quantities. Stock reservation, cart, checkout, orders, and authentication remain outside this work.
+V5 moves the previous product quantity to its default variant and starts any other existing variants at `0`, because their historical distribution is unknown. New and updated variants have independent quantities. Carts now use explicit variant IDs; see [the cart API](04-carts-api.md). Stock reservation, checkout, orders, and authentication remain outside this work.

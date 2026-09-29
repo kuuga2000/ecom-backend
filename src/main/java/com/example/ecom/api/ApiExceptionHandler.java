@@ -2,6 +2,7 @@ package com.example.ecom.api;
 
 import com.example.ecom.product.InvalidProductQueryException;
 import com.example.ecom.product.CatalogException;
+import com.example.ecom.cart.CartException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import com.example.ecom.product.ProductNotFoundException;
@@ -14,6 +15,15 @@ import java.net.URI;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(CartException.class)
+    ProblemDetail handleCart(CartException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
+        problem.setTitle(exception.getStatus().value() == 404 ? "Cart resource not found" :
+                exception.getStatus().value() == 409 ? "Cart conflict" : "Invalid cart request");
+        problem.setType(URI.create("https://example.com/problems/cart"));
+        return problem;
+    }
+
     @ExceptionHandler(CatalogException.class)
     ProblemDetail handleCatalog(CatalogException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());

@@ -209,4 +209,24 @@ docker run --rm --network ecom-backend_default \
 
 If the backend stops during startup, read `docker compose logs backend` first. Database connection errors usually mean PostgreSQL is unavailable, the container hostname is wrong for the selected network, or the credentials differ. A Flyway validation error means the migration history and files differ; check `flyway_schema_history` rather than modifying an already-applied migration.
 
-For endpoint payloads and errors, use the [product read API](../api-docs/products-api.md) and [categories and variants API](../api-docs/03-categories-and-product-variants-api.md) references.
+For endpoint payloads and errors, use the [product read API](../api-docs/products-api.md), [categories and variants API](../api-docs/03-categories-and-product-variants-api.md), and [cart API](../api-docs/04-carts-api.md) references.
+
+## Try the cart API
+
+After starting the backend, create a cart and copy its UUID from the response:
+
+```bash
+curl --fail-with-body -X POST http://localhost:8081/api/carts
+curl --fail-with-body http://localhost:8081/api/products/1
+```
+
+Use an ID from the product's `variants` array, including for a product with only one variant. For example, if the variant ID is `1`:
+
+```bash
+curl --fail-with-body -X POST http://localhost:8081/api/carts/<uuid>/items \
+  -H 'Content-Type: application/json' \
+  -d '{"variantId":1,"quantity":1}'
+curl --fail-with-body http://localhost:8081/api/carts/<uuid>
+```
+
+The V6 migration creates `carts` and `cart_items` automatically on backend startup. It leaves product and variant stock unchanged.

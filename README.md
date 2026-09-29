@@ -7,8 +7,9 @@ Step-by-step walkthroughs:
 - [`book/01-milestone-1-product-read-api.md`](book/01-milestone-1-product-read-api.md)
 - [`book/02-milestone-2-product-search-and-pagination.md`](book/02-milestone-2-product-search-and-pagination.md)
 - [`book/03-milestone-3-categories-and-product-variants.md`](book/03-milestone-3-categories-and-product-variants.md)
+- [`book/04-variant-selection-and-carts.md`](book/04-variant-selection-and-carts.md)
 
-API references: [product reads](api-docs/products-api.md) and [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md).
+API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), and [carts](api-docs/04-carts-api.md).
 
 Docker commands and troubleshooting: [Docker guide](docker-docs/README.md).
 
@@ -26,7 +27,7 @@ src/main/resources/
 └── db/migration/                # Versioned Flyway SQL
 ```
 
-The catalog now has categories, products, and product variants. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `customers`, `addresses`, `carts`, `cart_items`, `orders`, `order_items`, and `payments`.
+The backend now has categories, products, product variants, and anonymous carts. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `customers`, `addresses`, `carts`, `cart_items`, `orders`, `order_items`, and `payments`.
 
 Initial endpoints:
 
@@ -45,7 +46,7 @@ Proposed milestones:
 2. Product search, pagination, and sorting (implemented).
 3. Categories and product variants, with create/update operations (implemented).
 4. Customer authentication and authorization.
-5. Persistent carts and stock-aware checkout.
+5. Persistent carts (implemented); stock-aware checkout remains planned.
 6. Orders and payment-provider integration.
 7. Observability, security hardening, integration tests, and deployment configuration.
 8. React storefront after the backend contract is ready.
