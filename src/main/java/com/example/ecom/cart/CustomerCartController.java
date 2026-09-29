@@ -9,7 +9,7 @@ import java.util.Map;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api/cart")
+@RequestMapping("/api/v1/cart")
 public class CustomerCartController {
     private final CustomerCartService service;
     public CustomerCartController(CustomerCartService service) { this.service = service; }

@@ -31,7 +31,7 @@ class CartControllerTest {
 
     @Test void addPassesExplicitVariantIdAndQuantity() throws Exception {
         when(service.add(eq(cartId), any())).thenReturn(new CartResponse(cartId, List.of()));
-        mvc.perform(post("/api/carts/{cartId}/items", cartId)
+        mvc.perform(post("/api/v1/carts/{cartId}/items", cartId)
                 .contentType("application/json").content("{\"variantId\":7,\"quantity\":2}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.id").value(cartId.toString()));
         verify(service).add(cartId, new CartItemRequest(7L, 2));
@@ -40,7 +40,7 @@ class CartControllerTest {
     @Test void missingVariantIdReturnsBadRequest() throws Exception {
         when(service.add(eq(cartId), any())).thenThrow(new CartException(HttpStatus.BAD_REQUEST,
                 "variantId is required and must be positive"));
-        mvc.perform(post("/api/carts/{cartId}/items", cartId)
+        mvc.perform(post("/api/v1/carts/{cartId}/items", cartId)
                 .contentType("application/json").content("{\"quantity\":2}"))
                 .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail")
                         .value("variantId is required and must be positive"));

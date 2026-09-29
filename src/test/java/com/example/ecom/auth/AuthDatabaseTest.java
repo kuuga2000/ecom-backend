@@ -44,7 +44,7 @@ class AuthDatabaseTest {
     @Test void registrationLoginAndMeUseSafeProfileAndPasswordHash() throws Exception {
         String email = uniqueEmail();
         String password = "correct-horse-123";
-        var registration = mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        var registration = mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\" Alice \",\"email\":\" " + email.toUpperCase() + " \",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email").value(email))
@@ -55,31 +55,31 @@ class AuthDatabaseTest {
         String storedHash = jdbc.queryForObject("SELECT password_hash FROM customers WHERE email = ?", String.class, email);
         assertThat(storedHash).isNotEqualTo(password).startsWith("$2");
 
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Other\",\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isConflict());
-        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"password\":\"wrong-password\"}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.detail").value("Invalid email or password"));
-        mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"missing-" + email + "\",\"password\":\"wrong-password\"}"))
                 .andExpect(status().isUnauthorized()).andExpect(jsonPath("$.detail").value("Invalid email or password"));
 
         String token = login(email.toUpperCase(), password);
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + token))
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.email").value(email))
                 .andExpect(jsonPath("$.role").value("CUSTOMER"));
     }
 
     @Test void registrationRejectsInvalidInputAndClientSelectedRole() throws Exception {
         String email = uniqueEmail();
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"A\",\"email\":\"" + email + "\",\"password\":\"short\"}"))
                 .andExpect(status().isBadRequest());
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"A\",\"email\":\"bad\",\"password\":\"long-enough-123\"}"))
                 .andExpect(status().isBadRequest());
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"A\",\"email\":\"" + email + "\",\"password\":\"long-enough-123\",\"role\":\"ADMIN\"}"))
                 .andExpect(status().isBadRequest());
         assertThat(jdbc.queryForObject("SELECT count(*) FROM customers WHERE email = ?", Integer.class, email)).isZero();
@@ -87,7 +87,7 @@ class AuthDatabaseTest {
 
     @Test void databaseEnforcesNormalizedEmailUniqueness() throws Exception {
         String email = uniqueEmail();
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"A\",\"email\":\"" + email + "\",\"password\":\"long-enough-123\"}"))
                 .andExpect(status().isCreated());
         assertThatThrownBy(() -> jdbc.update(
@@ -98,55 +98,72 @@ class AuthDatabaseTest {
 
     @Test void tokenValidationAndRoutePermissions() throws Exception {
         String email = uniqueEmail();
-        mvc.perform(post("/api/auth/register").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Customer\",\"email\":\"" + email + "\",\"password\":\"long-enough-123\"}"))
                 .andExpect(status().isCreated());
         String token = login(email, "long-enough-123");
         long id = jdbc.queryForObject("SELECT id FROM customers WHERE email = ?", Long.class, email);
 
-        mvc.perform(get("/api/products")).andExpect(status().isOk());
-        mvc.perform(get("/api/categories")).andExpect(status().isOk());
-        mvc.perform(get("/api/customers/me")).andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.instance").value("/api/customers/me"));
-        mvc.perform(post("/api/categories").contentType(MediaType.APPLICATION_JSON)
+        mvc.perform(get("/api/v1/products")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/categories")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/products/1")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/categories/1")).andExpect(status().isOk());
+        mvc.perform(get("/api/v1/carts/00000000-0000-0000-0000-000000000000"))
+                .andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/cart")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/customers/me")).andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.instance").value("/api/v1/customers/me"));
+        mvc.perform(post("/api/v1/categories").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"slug\":\"security-test\",\"name\":\"Security test\"}"))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(post("/api/categories").header("Authorization", "Bearer " + token)
+        mvc.perform(post("/api/v1/categories").header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"slug\":\"security-test\",\"name\":\"Security test\"}"))
                 .andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.instance").value("/api/categories"));
-        mvc.perform(post("/api/products").header("Authorization", "Bearer " + token)
+                .andExpect(jsonPath("$.instance").value("/api/v1/categories"));
+        mvc.perform(post("/api/v1/products").header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/categories/1").header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/products/1").header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(post("/api/v1/products/1/variants").header("Authorization", "Bearer " + token)
+                .contentType(MediaType.APPLICATION_JSON).content("{}"))
+                .andExpect(status().isForbidden());
+        mvc.perform(put("/api/v1/products/1/variants/1").header("Authorization", "Bearer " + token)
                 .contentType(MediaType.APPLICATION_JSON).content("{}"))
                 .andExpect(status().isForbidden());
 
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + signed(
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + signed(
                 id, "CUSTOMER", settings.issuer(), Instant.now().minusSeconds(120),
                 Instant.now().minusSeconds(60), encoder))).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + signed(
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + signed(
                 id, "CUSTOMER", "wrong-issuer", Instant.now(),
                 Instant.now().plusSeconds(300), encoder))).andExpect(status().isUnauthorized());
         JwtEncoder wrongKey = new NimbusJwtEncoder(new ImmutableSecret<>(
                 new SecretKeySpec(new byte[32], "HmacSHA256")));
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + signed(
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + signed(
                 id, "CUSTOMER", settings.issuer(), Instant.now(),
                 Instant.now().plusSeconds(300), wrongKey))).andExpect(status().isUnauthorized());
 
         jdbc.update("UPDATE customers SET role = 'ADMIN' WHERE id = ?", id);
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + token))
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + token))
                 .andExpect(status().isUnauthorized());
         String adminToken = login(email, "long-enough-123");
-        mvc.perform(post("/api/categories").header("Authorization", "Bearer " + adminToken)
+        mvc.perform(post("/api/v1/categories").header("Authorization", "Bearer " + adminToken)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"slug\":\"security-test-" + id + "\",\"name\":\"Security test\"}"))
                 .andExpect(status().isCreated());
         jdbc.update("UPDATE customers SET active = false WHERE id = ?", id);
-        mvc.perform(get("/api/customers/me").header("Authorization", "Bearer " + adminToken))
+        mvc.perform(get("/api/v1/customers/me").header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isUnauthorized());
     }
 
     private String login(String email, String password) throws Exception {
-        String body = mvc.perform(post("/api/auth/login").contentType(MediaType.APPLICATION_JSON)
+        String body = mvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
                 .content("{\"email\":\"" + email + "\",\"password\":\"" + password + "\"}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.tokenType").value("Bearer"))
                 .andExpect(jsonPath("$.expiresIn").value(settings.expirationSeconds()))

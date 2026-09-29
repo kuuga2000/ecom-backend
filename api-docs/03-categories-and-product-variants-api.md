@@ -10,16 +10,16 @@ Base URL for the supplied Compose configuration: `http://localhost:8081`. Succes
 
 | Method | Path | Success | Purpose |
 | --- | --- | --- | --- |
-| `GET` | `/api/categories` | `200` | List categories in ID order |
-| `GET` | `/api/categories/{id}` | `200` | Get one category |
-| `POST` | `/api/categories` | `201` | Create a category |
-| `PUT` | `/api/categories/{id}` | `200` | Rename a category |
-| `GET` | `/api/products` | `200` | Search and page products, optionally by category |
-| `GET` | `/api/products/{id}` | `200` | Get product detail with variants |
-| `POST` | `/api/products` | `201` | Create product and its initial variants |
-| `PUT` | `/api/products/{id}` | `200` | Update product fields and optionally the default SKU and price |
-| `POST` | `/api/products/{id}/variants` | `201` | Add a variant to a product |
-| `PUT` | `/api/products/{id}/variants/{variantId}` | `200` | Update a variant belonging to that product |
+| `GET` | `/api/v1/categories` | `200` | List categories in ID order |
+| `GET` | `/api/v1/categories/{id}` | `200` | Get one category |
+| `POST` | `/api/v1/categories` | `201` | Create a category |
+| `PUT` | `/api/v1/categories/{id}` | `200` | Rename a category |
+| `GET` | `/api/v1/products` | `200` | Search and page products, optionally by category |
+| `GET` | `/api/v1/products/{id}` | `200` | Get product detail with variants |
+| `POST` | `/api/v1/products` | `201` | Create product and its initial variants |
+| `PUT` | `/api/v1/products/{id}` | `200` | Update product fields and optionally the default SKU and price |
+| `POST` | `/api/v1/products/{id}/variants` | `201` | Add a variant to a product |
+| `PUT` | `/api/v1/products/{id}/variants/{variantId}` | `200` | Update a variant belonging to that product |
 
 There are no category or variant delete endpoints in this milestone.
 
@@ -59,15 +59,15 @@ The existing product-level `sku`, `price`, and `inventoryQuantity` response fiel
 }
 ```
 
-The fragment above shows the added fields, not a standalone response. A full detail response appears below. The `GET /api/products` page and list item shapes remain the same as Milestone 2; the list does not embed categories or variants.
+The fragment above shows the added fields, not a standalone response. A full detail response appears below. The `GET /api/v1/products` page and list item shapes remain the same as Milestone 2; the list does not embed categories or variants.
 
 ## Categories
 
 ### List and get
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/categories'
-curl --fail-with-body 'http://localhost:8081/api/categories/2'
+curl --fail-with-body 'http://localhost:8081/api/v1/categories'
+curl --fail-with-body 'http://localhost:8081/api/v1/categories/2'
 ```
 
 The list is a JSON array ordered by category ID. After creating `apparel`, the responses are:
@@ -83,12 +83,12 @@ The list is a JSON array ordered by category ID. After creating `apparel`, the r
 {"id": 2, "slug": "apparel", "name": "Apparel"}
 ```
 
-All existing products were assigned to `uncategorized` by the V4 migration. `GET /api/categories/{id}` returns `404` for an unknown ID.
+All existing products were assigned to `uncategorized` by the V4 migration. `GET /api/v1/categories/{id}` returns `404` for an unknown ID.
 
 ### Create
 
 ```bash
-curl --fail-with-body -X POST 'http://localhost:8081/api/categories' \
+curl --fail-with-body -X POST 'http://localhost:8081/api/v1/categories' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"slug":"apparel","name":"Apparel"}'
@@ -105,7 +105,7 @@ Status: `201 Created`. Body:
 ### Rename
 
 ```bash
-curl --fail-with-body -X PUT 'http://localhost:8081/api/categories/2' \
+curl --fail-with-body -X PUT 'http://localhost:8081/api/v1/categories/2' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Clothing"}'
@@ -124,7 +124,7 @@ The slug is immutable. A `slug` field may be omitted or supplied with its exact 
 ### List, search, filter, and sort
 
 ```http
-GET /api/products?q=blue&categoryId=2&page=0&size=10&sort=price,asc
+GET /api/v1/products?q=blue&categoryId=2&page=0&size=10&sort=price,asc
 ```
 
 | Parameter | Default | Behavior |
@@ -141,7 +141,7 @@ For a Tee with two Blue variants, this request returns the Tee once:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?categoryId=2&q=blue&page=0&size=10&sort=price,asc'
+  'http://localhost:8081/api/v1/products?categoryId=2&q=blue&page=0&size=10&sort=price,asc'
 ```
 
 ```json
@@ -172,7 +172,7 @@ The list shows `TEE-RED-S` because that is the default variant. The Blue SKUs st
 ### Get detail
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products/5'
+curl --fail-with-body 'http://localhost:8081/api/v1/products/5'
 ```
 
 ```json
@@ -210,7 +210,7 @@ An unknown product ID retains the existing `404` problem response with title `Pr
 Send the product fields plus a single `sku` and `price`. The service creates one active, optionless default variant:
 
 ```bash
-curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+curl --fail-with-body -X POST 'http://localhost:8081/api/v1/products' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Cap","description":"Cotton cap","currency":"USD","imageUrl":null,"inventoryQuantity":10,"active":true,"categoryId":2,"sku":"CAP-001","price":15.00}'
@@ -242,7 +242,7 @@ Status: `201 Created`. Body:
 Send `variants` instead of top-level `sku` and `price`. `defaultVariantIndex` is a zero-based index into the request array and defaults to `0`.
 
 ```bash
-curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+curl --fail-with-body -X POST 'http://localhost:8081/api/v1/products' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"defaultVariantIndex":0,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"inventoryQuantity":20,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"inventoryQuantity":10,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"inventoryQuantity":8,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"inventoryQuantity":5,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
@@ -257,7 +257,7 @@ Product create and update require `name` (1–200 trimmed characters), `descript
 `PUT` requires the product fields again. Omit `sku` and `price` to keep the default variant SKU and price unchanged. Supply **both** to update them. Top-level `inventoryQuantity`, when supplied, updates only the default variant stock; omit it to keep that stock unchanged. Send other variant changes to the variant endpoint; a `variants` or `defaultVariantIndex` field in `PUT` returns `400`.
 
 ```bash
-curl --fail-with-body -X PUT 'http://localhost:8081/api/products/4' \
+curl --fail-with-body -X PUT 'http://localhost:8081/api/v1/products/4' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Canvas Cap","description":"Cotton canvas cap","currency":"USD","inventoryQuantity":8,"active":true,"categoryId":2,"sku":"CAP-CANVAS-001","price":17.50}'
@@ -290,7 +290,7 @@ Each option name and value must be nonblank. Names are at most 100 characters; v
 ### Add a variant
 
 ```bash
-curl --fail-with-body -X POST 'http://localhost:8081/api/products/5/variants' \
+curl --fail-with-body -X POST 'http://localhost:8081/api/v1/products/5/variants' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-GREEN-L","price":23.00,"active":true,"inventoryQuantity":4,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
@@ -310,7 +310,7 @@ The existing default variant does not change when another variant is added.
 The `variantId` must belong to the product ID in the path. Send a complete variant request:
 
 ```bash
-curl --fail-with-body -X PUT 'http://localhost:8081/api/products/5/variants/9' \
+curl --fail-with-body -X PUT 'http://localhost:8081/api/v1/products/5/variants/9' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-GREEN-L","price":24.00,"active":false,"inventoryQuantity":2,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
@@ -340,7 +340,7 @@ All examples below use `application/problem+json`. The `instance` value is the r
 Example duplicate option combination:
 
 ```bash
-curl --include -X POST 'http://localhost:8081/api/products/5/variants' \
+curl --include -X POST 'http://localhost:8081/api/v1/products/5/variants' \
   -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-RED-S-OTHER","price":21.00,"active":true,"options":[{"name":" size ","value":"s"},{"name":"COLOR","value":"RED"}]}'
@@ -349,7 +349,7 @@ curl --include -X POST 'http://localhost:8081/api/products/5/variants' \
 ```json
 {
   "detail": "Option combination already exists for product",
-  "instance": "/api/products/5/variants",
+  "instance": "/api/v1/products/5/variants",
   "status": 409,
   "title": "Catalog conflict",
   "type": "https://example.com/problems/catalog"
@@ -361,7 +361,7 @@ Example unknown category on product creation:
 ```json
 {
   "detail": "Category 999 was not found",
-  "instance": "/api/products",
+  "instance": "/api/v1/products",
   "status": 404,
   "title": "Resource not found",
   "type": "https://example.com/problems/catalog"

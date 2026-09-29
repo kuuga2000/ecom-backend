@@ -11,9 +11,11 @@ Step-by-step walkthroughs:
 - [`book/05-milestone-4-customer-authentication.md`](book/05-milestone-4-customer-authentication.md)
 - [`book/06-milestone-5-customer-cart.md`](book/06-milestone-5-customer-cart.md)
 
-API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), [carts](api-docs/04-carts-api.md), [authentication](api-docs/05-authentication-api.md), and [customer carts](api-docs/06-customer-cart-api.md).
+API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), [carts](api-docs/04-carts-api.md), [authentication](api-docs/05-authentication-api.md), [customer carts](api-docs/06-customer-cart-api.md), and the [complete API v1 route inventory](api-docs/07-api-versioning.md).
 
 Docker commands and troubleshooting: [Docker guide](docker-docs/README.md).
+
+All frontend-facing endpoints use the `/api/v1` prefix. The `v1` value identifies the API contract, not a milestone.
 
 ## Proposed backend shape
 
@@ -37,10 +39,10 @@ Initial endpoints:
 
 | Method | Path | Result |
 | --- | --- | --- |
-| `GET` | `/api/products` | Searchable, sortable page of products |
-| `GET` | `/api/products/{id}` | One product with category and variants, or an RFC 9457-style `404` problem response |
-| `GET` | `/api/categories` | All categories |
-| `GET` | `/api/categories/{id}` | One category |
+| `GET` | `/api/v1/products` | Searchable, sortable page of products |
+| `GET` | `/api/v1/products/{id}` | One product with category and variants, or an RFC 9457-style `404` problem response |
+| `GET` | `/api/v1/categories` | All categories |
+| `GET` | `/api/v1/categories/{id}` | One category |
 
 The collection endpoint accepts `q`, `categoryId`, `page`, `size`, and `sort`. Defaults are `page=0`, `size=20`, and `sort=name,asc`.
 
@@ -86,11 +88,11 @@ DB_PASSWORD=postgres
 Check the endpoints from another terminal:
 
 ```bash
-curl --fail-with-body http://localhost:8081/api/products
-curl --fail-with-body 'http://localhost:8081/api/products?q=mouse'
-curl --fail-with-body 'http://localhost:8081/api/products?page=0&size=2&sort=price,desc'
-curl --fail-with-body http://localhost:8081/api/products/1
-curl --include http://localhost:8081/api/products/999
+curl --fail-with-body http://localhost:8081/api/v1/products
+curl --fail-with-body 'http://localhost:8081/api/v1/products?q=mouse'
+curl --fail-with-body 'http://localhost:8081/api/v1/products?page=0&size=2&sort=price,desc'
+curl --fail-with-body http://localhost:8081/api/v1/products/1
+curl --include http://localhost:8081/api/v1/products/999
 ```
 
 Port `8081` avoids colliding with another service already using this machine's port `8080`; set `APP_PORT` to change it. Stop the backend:

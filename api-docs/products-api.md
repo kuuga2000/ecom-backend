@@ -63,7 +63,7 @@ Example list item (product detail also includes `category`, `defaultVariantId`, 
 ## List, search, paginate, and sort products
 
 ```http
-GET /api/products
+GET /api/v1/products
 ```
 
 ### Request payload
@@ -110,7 +110,7 @@ Response payload:
 Request:
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products'
+curl --fail-with-body 'http://localhost:8081/api/v1/products'
 ```
 
 Response:
@@ -170,7 +170,7 @@ Request:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?q=mouse'
+  'http://localhost:8081/api/v1/products?q=mouse'
 ```
 
 Response:
@@ -206,7 +206,7 @@ Request:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?q=hub-usbc'
+  'http://localhost:8081/api/v1/products?q=hub-usbc'
 ```
 
 Response:
@@ -240,7 +240,7 @@ Request:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?page=0&size=2&sort=price,desc'
+  'http://localhost:8081/api/v1/products?page=0&size=2&sort=price,desc'
 ```
 
 Response:
@@ -285,7 +285,7 @@ Second-page request:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?page=1&size=2&sort=price,desc'
+  'http://localhost:8081/api/v1/products?page=1&size=2&sort=price,desc'
 ```
 
 Second-page response:
@@ -338,7 +338,7 @@ Request:
 
 ```bash
 curl --include \
-  'http://localhost:8081/api/products?sort=createdAt,desc'
+  'http://localhost:8081/api/v1/products?sort=createdAt,desc'
 ```
 
 Response:
@@ -346,7 +346,7 @@ Response:
 ```json
 {
   "detail": "sort field must be name or price",
-  "instance": "/api/products",
+  "instance": "/api/v1/products",
   "status": 400,
   "title": "Invalid product query",
   "type": "https://example.com/problems/invalid-product-query",
@@ -371,7 +371,7 @@ Possible validation details include:
 ## Get a product by ID
 
 ```http
-GET /api/products/{id}
+GET /api/v1/products/{id}
 ```
 
 ### Request payload
@@ -395,7 +395,7 @@ Status:
 Request:
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products/1'
+curl --fail-with-body 'http://localhost:8081/api/v1/products/1'
 ```
 
 Response excerpt (the actual detail response also includes `category`, `defaultVariantId`, and `variants`):
@@ -427,7 +427,7 @@ Status:
 Request:
 
 ```bash
-curl --include 'http://localhost:8081/api/products/999'
+curl --include 'http://localhost:8081/api/v1/products/999'
 ```
 
 Response:
@@ -435,7 +435,7 @@ Response:
 ```json
 {
   "detail": "Product 999 was not found",
-  "instance": "/api/products/999",
+  "instance": "/api/v1/products/999",
   "status": 404,
   "title": "Product not found",
   "type": "https://example.com/problems/product-not-found",
@@ -447,5 +447,5 @@ Response:
 
 | Method | Path | Request body | Success | Errors |
 | --- | --- | --- | --- | --- |
-| `GET` | `/api/products` | None | `200` product page | `400` invalid query parameter |
-| `GET` | `/api/products/{id}` | None | `200` product detail with category and variants | `404` product not found |
+| `GET` | `/api/v1/products` | None | `200` product page | `400` invalid query parameter |
+| `GET` | `/api/v1/products/{id}` | None | `200` product detail with category and variants | `404` product not found |

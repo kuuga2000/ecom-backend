@@ -1,12 +1,12 @@
 # Milestone 2: Product search, pagination, and sorting
 
-Milestone 2 extends the product collection endpoint while preserving `GET /api/products/{id}`. It adds case-insensitive name/SKU search, zero-based pagination, safe sorting, a consistent page response, structured parameter errors, and a Flyway migration for SKUs.
+Milestone 2 extends the product collection endpoint while preserving `GET /api/v1/products/{id}`. It adds case-insensitive name/SKU search, zero-based pagination, safe sorting, a consistent page response, structured parameter errors, and a Flyway migration for SKUs.
 
 Java and Maven continue to run entirely in Docker.
 
 ## 1. API contract
 
-`GET /api/products` now accepts these optional query parameters:
+`GET /api/v1/products` now accepts these optional query parameters:
 
 | Parameter | Default | Rules |
 | --- | --- | --- |
@@ -29,7 +29,7 @@ The response always has the same envelope:
 The existing item endpoint is unchanged apart from products now including their SKU:
 
 ```text
-GET /api/products/{id}
+GET /api/v1/products/{id}
 ```
 
 ## 2. Files added or changed
@@ -160,7 +160,7 @@ No repository implementation class is required; Spring Data creates it at startu
 For this request:
 
 ```text
-GET /api/products?q=key&page=1&size=10&sort=price,desc
+GET /api/v1/products?q=key&page=1&size=10&sort=price,desc
 ```
 
 the conceptual offset is:
@@ -229,7 +229,7 @@ Invalid parameters throw `InvalidProductQueryException`. `ApiExceptionHandler` m
 For example:
 
 ```bash
-curl --include 'http://localhost:8081/api/products?sort=createdAt,desc'
+curl --include 'http://localhost:8081/api/v1/products?sort=createdAt,desc'
 ```
 
 Response:
@@ -242,7 +242,7 @@ Content-Type: application/problem+json
 ```json
 {
   "detail": "sort field must be name or price",
-  "instance": "/api/products",
+  "instance": "/api/v1/products",
   "status": 400,
   "title": "Invalid product query",
   "type": "https://example.com/problems/invalid-product-query",
@@ -254,11 +254,11 @@ Content-Type: application/problem+json
 Other rejected examples:
 
 ```bash
-curl --include 'http://localhost:8081/api/products?page=-1'
-curl --include 'http://localhost:8081/api/products?page=abc'
-curl --include 'http://localhost:8081/api/products?size=0'
-curl --include 'http://localhost:8081/api/products?size=101'
-curl --include 'http://localhost:8081/api/products?sort=price,sideways'
+curl --include 'http://localhost:8081/api/v1/products?page=-1'
+curl --include 'http://localhost:8081/api/v1/products?page=abc'
+curl --include 'http://localhost:8081/api/v1/products?size=0'
+curl --include 'http://localhost:8081/api/v1/products?size=101'
+curl --include 'http://localhost:8081/api/v1/products?sort=price,sideways'
 ```
 
 ## 9. Build and run Milestone 2
@@ -292,7 +292,7 @@ docker compose -f compose.existing-db.yaml ps
 ### Default page
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products'
+curl --fail-with-body 'http://localhost:8081/api/v1/products'
 ```
 
 The default is page `0`, size `20`, sorted by name ascending and then ID ascending:
@@ -315,7 +315,7 @@ The actual product objects also include description, currency, image URL, invent
 ### Search by name
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products?q=mouse'
+curl --fail-with-body 'http://localhost:8081/api/v1/products?q=mouse'
 ```
 
 ```json
@@ -334,7 +334,7 @@ Search is case-insensitive, so `q=MOUSE` produces the same match.
 ### Search by SKU
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products?q=hub-usbc'
+curl --fail-with-body 'http://localhost:8081/api/v1/products?q=hub-usbc'
 ```
 
 ```json
@@ -352,7 +352,7 @@ curl --fail-with-body 'http://localhost:8081/api/products?q=hub-usbc'
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?page=0&size=2&sort=price,desc'
+  'http://localhost:8081/api/v1/products?page=0&size=2&sort=price,desc'
 ```
 
 ```json
@@ -371,13 +371,13 @@ Request the next page:
 
 ```bash
 curl --fail-with-body \
-  'http://localhost:8081/api/products?page=1&size=2&sort=price,desc'
+  'http://localhost:8081/api/v1/products?page=1&size=2&sort=price,desc'
 ```
 
 ### Existing ID endpoint
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products/1'
+curl --fail-with-body 'http://localhost:8081/api/v1/products/1'
 ```
 
 ```json

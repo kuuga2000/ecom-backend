@@ -106,14 +106,14 @@ public class SecurityConfig {
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**",
-                                "/api/categories", "/api/categories/**").permitAll()
-                        .requestMatchers("/api/cart", "/api/cart/**").authenticated()
-                        .requestMatchers("/api/carts", "/api/carts/**").permitAll()
-                        .requestMatchers("/api/products", "/api/products/**",
-                                "/api/categories", "/api/categories/**").hasRole("ADMIN")
-                        .requestMatchers("/api/customers/me").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/register", "/api/v1/auth/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/products", "/api/v1/products/**",
+                                "/api/v1/categories", "/api/v1/categories/**").permitAll()
+                        .requestMatchers("/api/v1/cart", "/api/v1/cart/**").authenticated()
+                        .requestMatchers("/api/v1/carts", "/api/v1/carts/**").permitAll()
+                        .requestMatchers("/api/v1/products", "/api/v1/products/**",
+                                "/api/v1/categories", "/api/v1/categories/**").hasRole("ADMIN")
+                        .requestMatchers("/api/v1/customers/me").authenticated()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth -> oauth.jwt(jwt -> jwt.jwtAuthenticationConverter(converter)))
                 .exceptionHandling(errors -> errors

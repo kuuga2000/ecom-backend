@@ -2,7 +2,7 @@
 
 Customers are stored in `customers` with a stable numeric ID, name, normalized email, BCrypt password hash, active flag, role (`CUSTOMER` or `ADMIN`), and creation/update timestamps. V7 creates the table without changing existing catalog or cart rows. PostgreSQL enforces normalized email and a unique `lower(email)` index.
 
-Registration and login are public. Catalog GET requests stay public. Product and category POST/PUT/PATCH/DELETE requests require `ADMIN`. `GET /api/customers/me` requires a bearer token. Existing anonymous cart endpoints remain available and are not associated with customer accounts. Milestone 5 adds the separate [authenticated customer cart API](06-customer-cart-api.md).
+Registration and login are public. Catalog GET requests stay public. Product and category POST/PUT/PATCH/DELETE requests require `ADMIN`. `GET /api/v1/customers/me` requires a bearer token. Existing anonymous cart endpoints remain available and are not associated with customer accounts. Milestone 5 adds the separate [authenticated customer cart API](06-customer-cart-api.md).
 
 ## Configuration
 
@@ -19,7 +19,7 @@ For local development, generate a fresh key with `openssl rand -base64 32` and p
 ## Register
 
 ```bash
-curl --fail-with-body -X POST http://localhost:8081/api/auth/register \
+curl --fail-with-body -X POST http://localhost:8081/api/v1/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"name":"Alice Example","email":" Alice@Example.com ","password":"replace-with-a-long-private-password"}'
 ```
@@ -43,7 +43,7 @@ Only `name`, `email`, and `password` are accepted. Clients cannot choose ID, rol
 ## Login
 
 ```bash
-curl --fail-with-body -X POST http://localhost:8081/api/auth/login \
+curl --fail-with-body -X POST http://localhost:8081/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"email":"ALICE@example.com","password":"replace-with-a-long-private-password"}'
 ```
@@ -64,7 +64,7 @@ Email lookup is case insensitive after normalization. Unknown email, wrong passw
 ## Current customer
 
 ```bash
-curl --fail-with-body http://localhost:8081/api/customers/me \
+curl --fail-with-body http://localhost:8081/api/v1/customers/me \
   -H 'Authorization: Bearer <signed-jwt>'
 ```
 
@@ -85,4 +85,4 @@ For the supplied external database, replace `docker compose exec postgres` with 
 
 ## Security notes
 
-The API uses bearer tokens in the `Authorization` header and keeps no authentication session or cookie. CSRF protection is disabled for this transport; browsers do not automatically attach this header to cross-site requests. Keep tokens out of URLs and logs, and use HTTPS beyond local development. A legacy cart UUID remains an independent anonymous access token; `/api/cart` is owned through the validated customer token.
+The API uses bearer tokens in the `Authorization` header and keeps no authentication session or cookie. CSRF protection is disabled for this transport; browsers do not automatically attach this header to cross-site requests. Keep tokens out of URLs and logs, and use HTTPS beyond local development. A legacy cart UUID remains an independent anonymous access token; `/api/v1/cart` is owned through the validated customer token.

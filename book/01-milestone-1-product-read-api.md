@@ -8,9 +8,9 @@ The first milestone is deliberately small: read products from PostgreSQL over HT
 
 | Method | Path | Behavior |
 | --- | --- | --- |
-| `GET` | `/api/products` | Returns every product, ordered by ID |
-| `GET` | `/api/products/{id}` | Returns one product |
-| `GET` | `/api/products/{missingId}` | Returns `404 application/problem+json` |
+| `GET` | `/api/v1/products` | Returns every product, ordered by ID |
+| `GET` | `/api/v1/products/{id}` | Returns one product |
+| `GET` | `/api/v1/products/{missingId}` | Returns `404 application/problem+json` |
 
 The request flow is:
 
@@ -139,7 +139,7 @@ Flyway also creates `public.flyway_schema_history`. It records which migrations 
 
 ### Controller
 
-`ProductController` maps `/api/products` requests to the service. `@RestController` tells Spring MVC to serialize returned DTOs as JSON.
+`ProductController` maps `/api/v1/products` requests to the service. `@RestController` tells Spring MVC to serialize returned DTOs as JSON.
 
 ### Error handling
 
@@ -148,7 +148,7 @@ Flyway also creates `public.flyway_schema_history`. It records which migrations 
 ```json
 {
   "detail": "Product 999 was not found",
-  "instance": "/api/products/999",
+  "instance": "/api/v1/products/999",
   "status": 404,
   "title": "Product not found",
   "type": "https://example.com/problems/product-not-found",
@@ -258,26 +258,26 @@ The container listens on port `8080`; Docker publishes it as host port `8081` be
 List products:
 
 ```bash
-curl --fail-with-body http://localhost:8081/api/products
+curl --fail-with-body http://localhost:8081/api/v1/products
 ```
 
 Get product 1:
 
 ```bash
-curl --fail-with-body http://localhost:8081/api/products/1
+curl --fail-with-body http://localhost:8081/api/v1/products/1
 ```
 
 Check the 404 response:
 
 ```bash
-curl --include http://localhost:8081/api/products/999
+curl --include http://localhost:8081/api/v1/products/999
 ```
 
 To use another host port:
 
 ```bash
 APP_PORT=8090 docker compose -f compose.existing-db.yaml up -d
-curl http://localhost:8090/api/products
+curl http://localhost:8090/api/v1/products
 ```
 
 ## 10. Run tests without installing Java

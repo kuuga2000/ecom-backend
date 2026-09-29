@@ -1,6 +1,6 @@
 # Milestone 5: customer carts
 
-This milestone introduces `/api/cart`, a persistent cart owned by the authenticated customer. The server uses the customer ID in the validated JWT. A customer can read only that cart and mutate only its own item IDs; another customer's item ID receives `404`.
+This milestone introduces `/api/v1/cart`, a persistent cart owned by the authenticated customer. The server uses the customer ID in the validated JWT. A customer can read only that cart and mutate only its own item IDs; another customer's item ID receives `404`.
 
 A cart item stores one exact product variant ID and a quantity. The selected variant includes the complete option combination, so a product with color, size, diameter, or any other options uses the same request shape. V8 adds the customer foreign key and unique customer constraint to `carts`, and gives `cart_items` stable IDs while retaining unique cart/variant pairs. Existing UUID-based anonymous carts remain independent for compatibility.
 

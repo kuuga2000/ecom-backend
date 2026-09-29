@@ -20,9 +20,9 @@ docker compose logs --tail=100 backend
 Compose waits for PostgreSQL's health check before starting the backend. During backend startup, look for Flyway migration and Spring Boot startup messages. Then call the API:
 
 ```bash
-curl --fail-with-body 'http://localhost:8081/api/products'
-curl --fail-with-body 'http://localhost:8081/api/categories'
-curl --fail-with-body 'http://localhost:8081/api/products/1'
+curl --fail-with-body 'http://localhost:8081/api/v1/products'
+curl --fail-with-body 'http://localhost:8081/api/v1/categories'
+curl --fail-with-body 'http://localhost:8081/api/v1/products/1'
 ```
 
 To change the host port or local database credentials, copy the example environment file and edit it before starting the stack:
@@ -103,7 +103,7 @@ docker compose -f compose.existing-db.yaml build
 docker compose -f compose.existing-db.yaml up -d
 docker compose -f compose.existing-db.yaml ps
 docker compose -f compose.existing-db.yaml logs --tail=100 backend
-curl --fail-with-body 'http://localhost:8081/api/products'
+curl --fail-with-body 'http://localhost:8081/api/v1/products'
 ```
 
 If the external network has another name, set `DB_DOCKER_NETWORK` before `up`, for example:
@@ -122,7 +122,7 @@ docker compose -f compose.existing-db.yaml down
 
 This does not stop or remove the external PostgreSQL container or its network.
 
-For the authenticated cart API, register and log in, then use the returned bearer token with `/api/cart`; see the [full cart flow](../api-docs/06-customer-cart-api.md). Flyway V8 adds customer cart ownership and stable cart item IDs when the updated backend starts.
+For the authenticated cart API, register and log in, then use the returned bearer token with `/api/v1/cart`; see the [full cart flow](../api-docs/06-customer-cart-api.md). Flyway V8 adds customer cart ownership and stable cart item IDs when the updated backend starts.
 
 ## 3. Run with plain `docker` commands
 
@@ -164,7 +164,7 @@ Inspect and stop this plain-Docker setup:
 docker ps
 docker logs -f ecom-backend
 docker logs --tail=100 ecom-postgres
-curl --fail-with-body 'http://localhost:8081/api/products'
+curl --fail-with-body 'http://localhost:8081/api/v1/products'
 
 docker stop ecom-backend ecom-postgres
 docker rm ecom-backend ecom-postgres
@@ -218,17 +218,17 @@ For endpoint payloads and errors, use the [product read API](../api-docs/product
 After starting the backend, create a cart and copy its UUID from the response:
 
 ```bash
-curl --fail-with-body -X POST http://localhost:8081/api/carts
-curl --fail-with-body http://localhost:8081/api/products/1
+curl --fail-with-body -X POST http://localhost:8081/api/v1/carts
+curl --fail-with-body http://localhost:8081/api/v1/products/1
 ```
 
 Use an ID from the product's `variants` array, including for a product with only one variant. For example, if the variant ID is `1`:
 
 ```bash
-curl --fail-with-body -X POST http://localhost:8081/api/carts/<uuid>/items \
+curl --fail-with-body -X POST http://localhost:8081/api/v1/carts/<uuid>/items \
   -H 'Content-Type: application/json' \
   -d '{"variantId":1,"quantity":1}'
-curl --fail-with-body http://localhost:8081/api/carts/<uuid>
+curl --fail-with-body http://localhost:8081/api/v1/carts/<uuid>
 ```
 
 The V6 migration creates `carts` and `cart_items` automatically on backend startup. It leaves product and variant stock unchanged.

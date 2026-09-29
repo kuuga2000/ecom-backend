@@ -148,8 +148,8 @@ class CustomerCartDatabaseTest {
         ProductDetailResponse product = product(5, 5);
         long variant = product.variants().getFirst().id();
 
-        mvc.perform(get("/api/cart")).andExpect(status().isUnauthorized());
-        mvc.perform(get("/api/cart").header("Authorization", "Bearer invalid")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/cart")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/api/v1/cart").header("Authorization", "Bearer invalid")).andExpect(status().isUnauthorized());
         JwtClaimsSet expired = JwtClaimsSet.builder().issuer(settings.issuer())
                 .subject(Long.toString(jdbc.queryForObject("SELECT id FROM customers WHERE email = ?", Long.class, email)))
                 .issuedAt(Instant.now().minusSeconds(120)).expiresAt(Instant.now().minusSeconds(60))
@@ -157,41 +157,41 @@ class CustomerCartDatabaseTest {
                 .claim("role", "CUSTOMER").claim("token_type", "access").build();
         String expiredToken = encoder.encode(JwtEncoderParameters.from(
                 JwsHeader.with(MacAlgorithm.HS256).build(), expired)).getTokenValue();
-        mvc.perform(get("/api/cart").header("Authorization", "Bearer " + expiredToken))
+        mvc.perform(get("/api/v1/cart").header("Authorization", "Bearer " + expiredToken))
                 .andExpect(status().isUnauthorized());
 
-        mvc.perform(get("/api/cart").header("Authorization", "Bearer " + token))
+        mvc.perform(get("/api/v1/cart").header("Authorization", "Bearer " + token))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(0));
-        mvc.perform(post("/api/cart/items").header("Authorization", "Bearer " + token)
+        mvc.perform(post("/api/v1/cart/items").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content("{\"productId\":" + product.id() + ",\"quantity\":1}"))
                 .andExpect(status().isBadRequest());
-        mvc.perform(post("/api/cart/items").header("Authorization", "Bearer " + token)
+        mvc.perform(post("/api/v1/cart/items").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content("{\"variantId\":" + variant + ",\"quantity\":1.5}"))
                 .andExpect(status().isBadRequest());
-        String addedJson = mvc.perform(post("/api/cart/items").header("Authorization", "Bearer " + token)
+        String addedJson = mvc.perform(post("/api/v1/cart/items").header("Authorization", "Bearer " + token)
                 .contentType("application/json").content("{\"variantId\":" + variant + ",\"quantity\":1}"))
                 .andExpect(status().isCreated()).andExpect(jsonPath("$.items[0].variantId").value(variant))
                 .andReturn().getResponse().getContentAsString();
         var addedCart = new ObjectMapper().readTree(addedJson);
         long itemId = addedCart.path("items").get(0).path("id").asLong();
         String customerCartId = addedCart.path("id").asText();
-        mvc.perform(get("/api/carts/{id}", customerCartId)).andExpect(status().isNotFound());
+        mvc.perform(get("/api/v1/carts/{id}", customerCartId)).andExpect(status().isNotFound());
         String otherEmail = "m5-test-" + UUID.randomUUID() + "@example.com";
         auth.register(new RegisterRequest("Other cart user", otherEmail, "long-enough-123"));
         String otherToken = auth.login(new LoginRequest(otherEmail, "long-enough-123")).accessToken();
-        mvc.perform(patch("/api/cart/items/{itemId}", itemId)
+        mvc.perform(patch("/api/v1/cart/items/{itemId}", itemId)
                 .header("Authorization", "Bearer " + otherToken).contentType("application/json")
                 .content("{\"quantity\":2}"))
                 .andExpect(status().isNotFound());
-        mvc.perform(delete("/api/cart/items/{itemId}", itemId)
+        mvc.perform(delete("/api/v1/cart/items/{itemId}", itemId)
                 .header("Authorization", "Bearer " + otherToken)).andExpect(status().isNotFound());
-        mvc.perform(get("/api/cart").header("Authorization", "Bearer " + otherToken))
+        mvc.perform(get("/api/v1/cart").header("Authorization", "Bearer " + otherToken))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items.length()").value(0));
-        mvc.perform(patch("/api/cart/items/{itemId}", itemId)
+        mvc.perform(patch("/api/v1/cart/items/{itemId}", itemId)
                 .header("Authorization", "Bearer " + token).contentType("application/json")
                 .content("{\"quantity\":2}"))
                 .andExpect(status().isOk()).andExpect(jsonPath("$.items[0].quantity").value(2));
-        mvc.perform(delete("/api/cart/items/{itemId}", itemId)
+        mvc.perform(delete("/api/v1/cart/items/{itemId}", itemId)
                 .header("Authorization", "Bearer " + token)).andExpect(status().isNoContent());
     }
 

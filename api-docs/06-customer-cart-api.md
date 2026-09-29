@@ -1,16 +1,16 @@
 # Milestone 5: authenticated customer cart
 
-`/api/cart` is the persistent cart for the customer identified by a validated Milestone 4 bearer token. Register and log in as described in [authentication](05-authentication-api.md), then set `TOKEN` to the returned `accessToken`. Every endpoint below requires `Authorization: Bearer $TOKEN`. The server takes the owner ID from the token, never from the request body.
+`/api/v1/cart` is the persistent cart for the customer identified by a validated Milestone 4 bearer token. Register and log in as described in [authentication](05-authentication-api.md), then set `TOKEN` to the returned `accessToken`. Every endpoint below requires `Authorization: Bearer $TOKEN`. The server takes the owner ID from the token, never from the request body.
 
-The older `/api/carts/{uuid}` anonymous API remains available for compatibility with earlier milestones. It is separate from the customer cart and its UUID does not transfer items into `/api/cart`.
+The older `/api/v1/carts/{uuid}` anonymous API remains available for compatibility with earlier milestones. It is separate from the customer cart and its UUID does not transfer items into `/api/v1/cart`.
 
 ## Full flow
 
-Choose a complete variant ID from `GET /api/products/{id}`. Each ID identifies one exact option combination, such as `Red / M`; product IDs, SKUs, and partial options are not accepted in cart writes.
+Choose a complete variant ID from `GET /api/v1/products/{id}`. Each ID identifies one exact option combination, such as `Red / M`; product IDs, SKUs, and partial options are not accepted in cart writes.
 
 ```bash
 # Before the first add, this read does not create a database row.
-curl --fail-with-body http://localhost:8081/api/cart \
+curl --fail-with-body http://localhost:8081/api/v1/cart \
   -H "Authorization: Bearer $TOKEN"
 ```
 
@@ -21,7 +21,7 @@ Status `200`; example response:
 ```
 
 ```bash
-curl --fail-with-body -X POST http://localhost:8081/api/cart/items \
+curl --fail-with-body -X POST http://localhost:8081/api/v1/cart/items \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"variantId":21,"quantity":2}'
 ```
@@ -54,14 +54,14 @@ Adding a second variant creates a second line. Repeating `POST` with variant `21
 
 ```bash
 # Use the cart item ID (101), not the variant ID, in the path.
-curl --fail-with-body -X PATCH http://localhost:8081/api/cart/items/101 \
+curl --fail-with-body -X PATCH http://localhost:8081/api/v1/cart/items/101 \
   -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' \
   -d '{"quantity":3}'
 
-curl --fail-with-body http://localhost:8081/api/cart \
+curl --fail-with-body http://localhost:8081/api/v1/cart \
   -H "Authorization: Bearer $TOKEN"
 
-curl -i -X DELETE http://localhost:8081/api/cart/items/101 \
+curl -i -X DELETE http://localhost:8081/api/v1/cart/items/101 \
   -H "Authorization: Bearer $TOKEN"
 ```
 
