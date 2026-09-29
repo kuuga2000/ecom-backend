@@ -19,6 +19,9 @@ services:
       DB_URL: ${DB_URL:-jdbc:postgresql://postgres:5432/ecommerce}
       DB_USERNAME: ${DB_USERNAME:-postgres}
       DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      JWT_SECRET: ${JWT_SECRET:?Set JWT_SECRET to a base64-encoded random key}
+      JWT_ISSUER: ${JWT_ISSUER:?Set JWT_ISSUER}
+      JWT_EXPIRATION_SECONDS: ${JWT_EXPIRATION_SECONDS:-900}
     ports:
       - "${APP_PORT:-8081}:8080"
     depends_on:

@@ -1,6 +1,6 @@
 # Ecommerce backend
 
-Milestones 1 through 3 provide a Java 25 / Spring Boot 4.1.1 product REST API backed by PostgreSQL. Java and Maven run in Docker; no host JDK installation is needed.
+Milestones 1 through 4 provide a Java 25 / Spring Boot 4.1.1 ecommerce REST API backed by PostgreSQL. Java and Maven run in Docker; no host JDK installation is needed.
 
 Step-by-step walkthroughs:
 
@@ -8,8 +8,9 @@ Step-by-step walkthroughs:
 - [`book/02-milestone-2-product-search-and-pagination.md`](book/02-milestone-2-product-search-and-pagination.md)
 - [`book/03-milestone-3-categories-and-product-variants.md`](book/03-milestone-3-categories-and-product-variants.md)
 - [`book/04-variant-selection-and-carts.md`](book/04-variant-selection-and-carts.md)
+- [`book/05-milestone-4-customer-authentication.md`](book/05-milestone-4-customer-authentication.md)
 
-API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), and [carts](api-docs/04-carts-api.md).
+API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), [carts](api-docs/04-carts-api.md), and [authentication](api-docs/05-authentication-api.md).
 
 Docker commands and troubleshooting: [Docker guide](docker-docs/README.md).
 
@@ -21,13 +22,15 @@ The code is organized by feature rather than by global technical layer:
 src/main/java/com/example/ecom/
 ├── EcomBackendApplication.java
 ├── api/                         # Cross-feature HTTP concerns
-└── product/                     # Controller, service, repository, entity, DTO
+├── auth/                        # Customer accounts and security
+├── cart/                        # Anonymous cart API
+└── product/                     # Catalog API
 src/main/resources/
 ├── application.yaml
 └── db/migration/                # Versioned Flyway SQL
 ```
 
-The backend now has categories, products, product variants, and anonymous carts. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `customers`, `addresses`, `carts`, `cart_items`, `orders`, `order_items`, and `payments`.
+The backend now has categories, products, product variants, anonymous carts, and customer accounts. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `addresses`, `orders`, `order_items`, and `payments`.
 
 Initial endpoints:
 
@@ -45,7 +48,7 @@ Proposed milestones:
 1. Product read API (implemented).
 2. Product search, pagination, and sorting (implemented).
 3. Categories and product variants, with create/update operations (implemented).
-4. Customer authentication and authorization.
+4. Customer authentication and authorization (implemented).
 5. Persistent carts (implemented); stock-aware checkout remains planned.
 6. Orders and payment-provider integration.
 7. Observability, security hardening, integration tests, and deployment configuration.
@@ -55,7 +58,7 @@ Proposed milestones:
 
 Prerequisites: Docker and Docker Compose only.
 
-The supplied database is available as `postgres` on Docker network `graphql-slardar_default`. Build the Java 25 image (the build runs the tests), then start the API on that network:
+The supplied database is available as `postgres` on Docker network `graphql-slardar_default`. Set `JWT_SECRET` (base64 random key) and `JWT_ISSUER` in an untracked `.env` file first; see the [authentication guide](api-docs/05-authentication-api.md). Build the Java 25 image (the build runs the tests), then start the API on that network:
 
 ```bash
 docker compose -f compose.existing-db.yaml build

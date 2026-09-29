@@ -209,7 +209,7 @@ docker run --rm --network ecom-backend_default \
 
 If the backend stops during startup, read `docker compose logs backend` first. Database connection errors usually mean PostgreSQL is unavailable, the container hostname is wrong for the selected network, or the credentials differ. A Flyway validation error means the migration history and files differ; check `flyway_schema_history` rather than modifying an already-applied migration.
 
-For endpoint payloads and errors, use the [product read API](../api-docs/products-api.md), [categories and variants API](../api-docs/03-categories-and-product-variants-api.md), and [cart API](../api-docs/04-carts-api.md) references.
+For endpoint payloads and errors, use the [product read API](../api-docs/products-api.md), [categories and variants API](../api-docs/03-categories-and-product-variants-api.md), [cart API](../api-docs/04-carts-api.md), and [authentication API](../api-docs/05-authentication-api.md) references.
 
 ## Try the cart API
 
@@ -230,3 +230,7 @@ curl --fail-with-body http://localhost:8081/api/carts/<uuid>
 ```
 
 The V6 migration creates `carts` and `cart_items` automatically on backend startup. It leaves product and variant stock unchanged.
+
+## Authentication settings
+
+Before starting either Compose configuration, create an untracked `.env` file with a base64 random `JWT_SECRET` and a nonblank `JWT_ISSUER`. For example, generate a key with `openssl rand -base64 32`, then copy it into `.env`. `JWT_EXPIRATION_SECONDS` defaults to `900`. Missing or malformed settings stop the backend at startup. See [the authentication guide](../api-docs/05-authentication-api.md) for registration, login, bearer requests, and development admin provisioning.

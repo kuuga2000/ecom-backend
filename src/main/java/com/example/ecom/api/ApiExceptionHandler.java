@@ -3,6 +3,7 @@ package com.example.ecom.api;
 import com.example.ecom.product.InvalidProductQueryException;
 import com.example.ecom.product.CatalogException;
 import com.example.ecom.cart.CartException;
+import com.example.ecom.auth.AuthException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import com.example.ecom.product.ProductNotFoundException;
@@ -15,6 +16,15 @@ import java.net.URI;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(AuthException.class)
+    ProblemDetail handleAuth(AuthException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
+        problem.setTitle(exception.getStatus().value() == 409 ? "Account conflict" :
+                exception.getStatus().value() == 401 ? "Unauthorized" : "Invalid account request");
+        problem.setType(URI.create("https://example.com/problems/auth"));
+        return problem;
+    }
+
     @ExceptionHandler(CartException.class)
     ProblemDetail handleCart(CartException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
