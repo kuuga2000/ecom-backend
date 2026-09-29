@@ -1,5 +1,7 @@
 # Carts and variant selection
 
+This documents the earlier anonymous `/api/carts/{uuid}` API. For a persistent cart owned by the signed-in customer, use the [Milestone 5 customer cart API](06-customer-cart-api.md).
+
 A **variant is one purchasable combination** of option values. A product can have one option (for example, color), two (color and size), three (diameter, size, and color), four, or more. The `options` array has no fixed number of entries. Every variant has its own ID, SKU, price, active flag, and stock count.
 
 For example, these are two distinct variants, possibly on different products:
@@ -25,7 +27,7 @@ Status: `201 Created`. The response is `{"id":"<uuid>","items":[]}`. Save the re
 curl --fail-with-body http://localhost:8081/api/carts/<uuid>
 ```
 
-A cart UUID acts as its access token in this initial API. There is no customer login or cart ownership yet; keep the UUID private.
+A cart UUID acts as the access token for this legacy anonymous API; keep it private. Authenticated customer carts use bearer tokens and `/api/cart` instead.
 
 ## Add a selected variant
 

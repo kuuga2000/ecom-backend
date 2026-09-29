@@ -122,6 +122,8 @@ docker compose -f compose.existing-db.yaml down
 
 This does not stop or remove the external PostgreSQL container or its network.
 
+For the authenticated cart API, register and log in, then use the returned bearer token with `/api/cart`; see the [full cart flow](../api-docs/06-customer-cart-api.md). Flyway V8 adds customer cart ownership and stable cart item IDs when the updated backend starts.
+
 ## 3. Run with plain `docker` commands
 
 The following path recreates the isolated stack without Compose. Container and network names are examples; these commands assume they are not already in use.

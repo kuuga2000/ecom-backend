@@ -74,7 +74,7 @@ public class CartService {
     }
 
     private void requireCart(UUID id, boolean lock) {
-        String sql = "SELECT id FROM carts WHERE id = ?" + (lock ? " FOR UPDATE" : "");
+        String sql = "SELECT id FROM carts WHERE id = ? AND customer_id IS NULL" + (lock ? " FOR UPDATE" : "");
         if (jdbc.query(sql, (rs, row) -> rs.getObject(1, UUID.class), id).isEmpty())
             throw new CartException(HttpStatus.NOT_FOUND, "Cart was not found");
     }

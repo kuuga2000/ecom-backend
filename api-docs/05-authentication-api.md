@@ -2,7 +2,7 @@
 
 Customers are stored in `customers` with a stable numeric ID, name, normalized email, BCrypt password hash, active flag, role (`CUSTOMER` or `ADMIN`), and creation/update timestamps. V7 creates the table without changing existing catalog or cart rows. PostgreSQL enforces normalized email and a unique `lower(email)` index.
 
-Registration and login are public. Catalog GET requests stay public. Product and category POST/PUT/PATCH/DELETE requests require `ADMIN`. `GET /api/customers/me` requires a bearer token. Existing anonymous cart endpoints remain available and are not associated with customer accounts in this milestone.
+Registration and login are public. Catalog GET requests stay public. Product and category POST/PUT/PATCH/DELETE requests require `ADMIN`. `GET /api/customers/me` requires a bearer token. Existing anonymous cart endpoints remain available and are not associated with customer accounts. Milestone 5 adds the separate [authenticated customer cart API](06-customer-cart-api.md).
 
 ## Configuration
 
@@ -85,4 +85,4 @@ For the supplied external database, replace `docker compose exec postgres` with 
 
 ## Security notes
 
-The API uses bearer tokens in the `Authorization` header and keeps no authentication session or cookie. CSRF protection is disabled for this transport; browsers do not automatically attach this header to cross-site requests. Keep tokens out of URLs and logs, and use HTTPS beyond local development. A cart UUID remains an independent anonymous access token until cart ownership is implemented later.
+The API uses bearer tokens in the `Authorization` header and keeps no authentication session or cookie. CSRF protection is disabled for this transport; browsers do not automatically attach this header to cross-site requests. Keep tokens out of URLs and logs, and use HTTPS beyond local development. A legacy cart UUID remains an independent anonymous access token; `/api/cart` is owned through the validated customer token.

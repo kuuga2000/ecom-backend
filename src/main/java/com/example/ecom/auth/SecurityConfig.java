@@ -109,6 +109,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/products", "/api/products/**",
                                 "/api/categories", "/api/categories/**").permitAll()
+                        .requestMatchers("/api/cart", "/api/cart/**").authenticated()
                         .requestMatchers("/api/carts", "/api/carts/**").permitAll()
                         .requestMatchers("/api/products", "/api/products/**",
                                 "/api/categories", "/api/categories/**").hasRole("ADMIN")
