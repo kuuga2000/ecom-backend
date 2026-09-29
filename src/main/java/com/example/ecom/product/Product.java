@@ -42,9 +42,6 @@ public class Product {
     @Column(name = "image_url", length = 1_000)
     private String imageUrl;
 
-    @Column(name = "inventory_quantity", nullable = false)
-    private int inventoryQuantity;
-
     @Column(nullable = false)
     private boolean active;
 
@@ -58,14 +55,14 @@ public class Product {
         // Required by JPA, which materializes entities through a no-argument constructor.
     }
 
-    public Product(String name, String description, String currency, String imageUrl, int inventoryQuantity, boolean active, Category category) {
-        update(name, description, currency, imageUrl, inventoryQuantity, active, category);
+    public Product(String name, String description, String currency, String imageUrl, boolean active, Category category) {
+        update(name, description, currency, imageUrl, active, category);
         this.createdAt = this.updatedAt;
     }
 
-    public void update(String name, String description, String currency, String imageUrl, int inventoryQuantity, boolean active, Category category) {
+    public void update(String name, String description, String currency, String imageUrl, boolean active, Category category) {
         this.name = name; this.description = description; this.currency = currency; this.imageUrl = imageUrl;
-        this.inventoryQuantity = inventoryQuantity; this.active = active; this.category = category;
+        this.active = active; this.category = category;
         this.updatedAt = OffsetDateTime.now();
     }
 
@@ -102,7 +99,7 @@ public class Product {
     }
 
     public int getInventoryQuantity() {
-        return inventoryQuantity;
+        return defaultVariant.getInventoryQuantity();
     }
 
     public boolean isActive() {

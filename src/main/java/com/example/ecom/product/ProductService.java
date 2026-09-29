@@ -60,14 +60,24 @@ public class ProductService {
         Category category = categories.get(request.categoryId());
         List<VariantRequest> requested = request.variants();
         if (requested == null || requested.isEmpty()) {
-            requested = List.of(new VariantRequest(request.sku(), request.price(), true, List.of()));
+            requested = List.of(new VariantRequest(request.sku(), request.price(), true, request.inventoryQuantity(), List.of()));
         } else if (request.sku() != null || request.price() != null) {
             throw bad("Use variants or legacy sku/price, not both");
         }
         int defaultIndex = request.defaultVariantIndex() == null ? 0 : request.defaultVariantIndex();
         if (defaultIndex < 0 || defaultIndex >= requested.size()) throw bad("Invalid defaultVariantIndex");
+        VariantRequest selected = requested.get(defaultIndex);
+        if (selected == null) throw bad("Variant is required");
+        if (request.inventoryQuantity() != null && selected.inventoryQuantity() != null
+                && !request.inventoryQuantity().equals(selected.inventoryQuantity()))
+            throw bad("Product inventoryQuantity must match the default variant");
+        if (request.inventoryQuantity() != null && selected.inventoryQuantity() == null) {
+            requested = new ArrayList<>(requested);
+            requested.set(defaultIndex, new VariantRequest(selected.sku(), selected.price(), selected.active(),
+                    request.inventoryQuantity(), selected.options()));
+        }
         Product product = products.saveAndFlush(new Product(request.name().trim(), request.description().trim(),
-                request.currency().trim().toUpperCase(Locale.ROOT), request.imageUrl(), request.inventoryQuantity(), request.active(), category));
+                request.currency().trim().toUpperCase(Locale.ROOT), request.imageUrl(), request.active(), category));
         List<ProductVariant> saved = new ArrayList<>();
         for (VariantRequest item : requested) saved.add(saveVariant(product, item, null));
         product.setDefaultVariant(saved.get(defaultIndex));
@@ -80,11 +90,13 @@ public class ProductService {
         checkProduct(request);
         if (request.variants() != null || request.defaultVariantIndex() != null) throw bad("Update variants through variant endpoints");
         product.update(request.name().trim(), request.description().trim(), request.currency().trim().toUpperCase(Locale.ROOT),
-                request.imageUrl(), request.inventoryQuantity(), request.active(), categories.get(request.categoryId()));
-        if (request.sku() != null || request.price() != null) {
-            if (request.sku() == null || request.price() == null) throw bad("sku and price must be provided together");
+                request.imageUrl(), request.active(), categories.get(request.categoryId()));
+        if (request.sku() != null || request.price() != null || request.inventoryQuantity() != null) {
+            if ((request.sku() == null) != (request.price() == null)) throw bad("sku and price must be provided together");
             ProductVariant v = product.getDefaultVariant();
-            saveVariant(product, new VariantRequest(request.sku(), request.price(), v.isActive(), readOptions(v)), v);
+            saveVariant(product, new VariantRequest(request.sku() == null ? v.getSku() : request.sku(),
+                    request.price() == null ? v.getPrice() : request.price(), v.isActive(),
+                    request.inventoryQuantity(), readOptions(v)), v);
         }
         return detail(product);
     }
@@ -107,6 +119,10 @@ public class ProductService {
         if (request.price() == null || request.price().signum() < 0 || request.price().scale() > 2 || request.price().precision() > 12)
             throw bad("price must be nonnegative with at most two decimal places");
         if (request.active() == null) throw bad("active is required");
+        if (request.inventoryQuantity() != null && request.inventoryQuantity() < 0)
+            throw bad("inventoryQuantity must be zero or greater");
+        int inventoryQuantity = request.inventoryQuantity() == null
+                ? (current == null ? 0 : current.getInventoryQuantity()) : request.inventoryQuantity();
         long currentId = current == null ? -1 : current.getId();
         String sku = request.sku().trim();
         if (variants.existsBySkuAndIdNot(sku, currentId)) throw conflict("SKU already exists");
@@ -114,8 +130,8 @@ public class ProductService {
         String signature = json(options);
         if (variants.existsByOptionSignatureAndProductIdAndIdNot(signature, product.getId(), currentId))
             throw conflict("Option combination already exists for product");
-        ProductVariant variant = current == null ? new ProductVariant(product, sku, request.price(), request.active(), signature, signature) : current;
-        if (current != null) variant.update(sku, request.price(), request.active(), signature, signature);
+        ProductVariant variant = current == null ? new ProductVariant(product, sku, request.price(), request.active(), inventoryQuantity, signature, signature) : current;
+        if (current != null) variant.update(sku, request.price(), request.active(), inventoryQuantity, signature, signature);
         return variants.saveAndFlush(variant);
     }
     private List<OptionSelection> normalizeOptions(List<OptionSelection> options) {
@@ -143,7 +159,7 @@ public class ProductService {
         if (request == null || request.name() == null || request.name().isBlank() || request.name().trim().length() > 200 ||
                 request.description() == null || request.description().trim().length() > 2000 ||
                 request.currency() == null || !request.currency().trim().matches("[A-Za-z]{3}") ||
-                request.categoryId() == null || request.inventoryQuantity() == null || request.inventoryQuantity() < 0 ||
+                request.categoryId() == null || request.inventoryQuantity() != null && request.inventoryQuantity() < 0 ||
                 request.active() == null || request.imageUrl() != null && request.imageUrl().length() > 1000)
             throw bad("Invalid product fields");
     }

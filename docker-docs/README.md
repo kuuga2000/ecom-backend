@@ -84,7 +84,7 @@ SELECT installed_rank, version, description, success
 FROM flyway_schema_history
 ORDER BY installed_rank;
 
-SELECT p.id, p.name, v.id AS variant_id, v.sku, v.price
+SELECT p.id, p.name, v.id AS variant_id, v.sku, v.price, v.inventory_quantity
 FROM products p
 JOIN product_variants v ON v.id = p.default_variant_id
 ORDER BY p.id;

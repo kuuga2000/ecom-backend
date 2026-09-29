@@ -38,9 +38,17 @@ class ProductServiceTest {
         when(products.findById(1L)).thenReturn(java.util.Optional.of(product));
         ProductService service = new ProductService(products, variants, categories);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.addVariant(1L,
-                new VariantRequest("SKU-1", new BigDecimal("1.00"), true,
+                new VariantRequest("SKU-1", new BigDecimal("1.00"), true, 2,
                         List.of(new OptionSelection(" Color ", "Red"), new OptionSelection("color", "Blue")))))
                 .isInstanceOf(CatalogException.class).hasMessageContaining("Duplicate option key");
+    }
+    @Test void rejectsNegativeVariantInventory() {
+        Product product = mock(Product.class);
+        when(products.findById(1L)).thenReturn(java.util.Optional.of(product));
+        ProductService service = new ProductService(products, variants, categories);
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.addVariant(1L,
+                new VariantRequest("SKU-3", new BigDecimal("1.00"), true, -1, List.of())))
+                .isInstanceOf(CatalogException.class).hasMessageContaining("inventoryQuantity");
     }
     @Test void rejectsDuplicateCombinationDespiteDifferentSkuAndOrder() {
         Product product = mock(Product.class);
@@ -49,7 +57,7 @@ class ProductServiceTest {
         when(variants.existsByOptionSignatureAndProductIdAndIdNot(anyString(), eq(1L), eq(-1L))).thenReturn(true);
         ProductService service = new ProductService(products, variants, categories);
         org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.addVariant(1L,
-                new VariantRequest("SKU-2", new BigDecimal("1.00"), true,
+                new VariantRequest("SKU-2", new BigDecimal("1.00"), true, 2,
                         List.of(new OptionSelection("Size", " M "), new OptionSelection("COLOR", "Red")))))
                 .isInstanceOf(CatalogException.class).hasMessageContaining("Option combination already exists");
     }

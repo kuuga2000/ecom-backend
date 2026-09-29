@@ -35,7 +35,7 @@ All monetary amounts are JSON numbers with two decimal places in the database. T
 | `price` | number | No | Price of the default variant; never negative |
 | `currency` | string | No | Three-letter currency code, currently `USD` |
 | `imageUrl` | string | Yes | Product image URL |
-| `inventoryQuantity` | integer | No | Available inventory; never negative |
+| `inventoryQuantity` | integer | No | Stock of the default variant; never negative |
 | `active` | boolean | No | Whether the product is active |
 | `createdAt` | string | No | ISO 8601 creation timestamp |
 | `updatedAt` | string | No | ISO 8601 last-update timestamp |

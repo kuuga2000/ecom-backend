@@ -1,6 +1,6 @@
 # Categories and product variants API
 
-This is the Milestone 3 / Week 1 API reference. It covers category reads and writes, product creation and updates, variant creation and updates, and the additions to product search and detail. The original list and ID read examples remain in [Products API](products-api.md).
+This is the Milestone 3 API reference, including the subsequent V5 variant-stock update. It covers category reads and writes, product creation and updates, variant creation and updates, and the additions to product search and detail. The original list and ID read examples remain in [Products API](products-api.md).
 
 Base URL for the supplied Compose configuration: `http://localhost:8081`. Successful responses use `application/json`. Errors use `application/problem+json`. Request examples use JSON and assume a fresh database; generated IDs and timestamps vary. Sections illustrate independent requests: later examples assume category 2 is still named `Apparel`, even if you tried the rename example.
 
@@ -37,6 +37,7 @@ A variant is:
   "sku": "TEE-RED-S",
   "price": 20.00,
   "active": true,
+  "inventoryQuantity": 20,
   "options": [
     {"name": "color", "value": "red"},
     {"name": "size", "value": "s"}
@@ -44,15 +45,15 @@ A variant is:
 }
 ```
 
-Variant IDs are stable and are the IDs a future cart can reference. Each variant owns its SKU, price, active flag, and options. A product owns its category, currency, and the current shared `inventoryQuantity`.
+Variant IDs are stable and are the IDs a future cart can reference. Each variant owns its SKU, price, active flag, option selections, and `inventoryQuantity`. Products no longer store stock.
 
-The existing product-level `sku` and `price` response fields come from the product's **default variant**. They are not separate stored values. On a product with several variants, the list displays the default variant's SKU and price; `sort=price` orders by that price, then product ID for ties. A product detail response adds these fields to the original product fields:
+The existing product-level `sku`, `price`, and `inventoryQuantity` response fields come from the product's **default variant**. They are not separate stored values. On a product with several variants, the list displays the default variant's SKU and price; `sort=price` orders by that price, then product ID for ties. A product detail response adds these fields to the original product fields:
 
 ```json
 {
   "category": {"id": 2, "slug": "apparel", "name": "Apparel"},
   "defaultVariantId": 5,
-  "variants": [{"id": 5, "sku": "TEE-RED-S", "price": 20.00, "active": true, "options": []}]
+  "variants": [{"id": 5, "sku": "TEE-RED-S", "price": 20.00, "active": true, "inventoryQuantity": 20, "options": []}]
 }
 ```
 
@@ -187,13 +188,13 @@ curl --fail-with-body 'http://localhost:8081/api/products/5'
   "defaultVariantId": 5,
   "variants": [
     {"id": 5, "sku": "TEE-RED-S", "price": 20.00, "active": true,
-     "options": [{"name":"color","value":"red"},{"name":"size","value":"s"}]},
+     "inventoryQuantity": 20, "options": [{"name":"color","value":"red"},{"name":"size","value":"s"}]},
     {"id": 6, "sku": "TEE-RED-M", "price": 20.00, "active": true,
-     "options": [{"name":"color","value":"red"},{"name":"size","value":"m"}]},
+     "inventoryQuantity": 10, "options": [{"name":"color","value":"red"},{"name":"size","value":"m"}]},
     {"id": 7, "sku": "TEE-BLUE-S", "price": 22.00, "active": true,
-     "options": [{"name":"color","value":"blue"},{"name":"size","value":"s"}]},
+     "inventoryQuantity": 8, "options": [{"name":"color","value":"blue"},{"name":"size","value":"s"}]},
     {"id": 8, "sku": "TEE-BLUE-M", "price": 22.00, "active": true,
-     "options": [{"name":"color","value":"blue"},{"name":"size","value":"m"}]}
+     "inventoryQuantity": 5, "options": [{"name":"color","value":"blue"},{"name":"size","value":"m"}]}
   ]
 }
 ```
@@ -227,7 +228,7 @@ Status: `201 Created`. Body:
   "updatedAt": "2026-09-29T00:00:00Z",
   "category": {"id": 2, "slug": "apparel", "name": "Apparel"},
   "defaultVariantId": 4,
-  "variants": [{"id": 4, "sku": "CAP-001", "price": 15.00, "active": true, "options": []}]
+  "variants": [{"id": 4, "sku": "CAP-001", "price": 15.00, "active": true, "inventoryQuantity": 10, "options": []}]
 }
 ```
 
@@ -238,16 +239,16 @@ Send `variants` instead of top-level `sku` and `price`. `defaultVariantIndex` is
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"defaultVariantIndex":0,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
+  -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"defaultVariantIndex":0,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"inventoryQuantity":20,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"inventoryQuantity":10,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"inventoryQuantity":8,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"inventoryQuantity":5,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
 ```
 
 Status: `201 Created`. The response is the full product detail shape shown in **Get detail**, with generated IDs and normalized lowercase options.
 
-Product create and update require `name` (1–200 trimmed characters), `description` (up to 2,000 characters), `currency` (three letters, stored uppercase), `inventoryQuantity` (nonnegative integer), `active` (boolean), and `categoryId` (existing ID). `imageUrl` is optional and at most 1,000 characters. On create, supply either top-level `sku` and `price` or a nonempty `variants` array. Combining both forms returns `400`.
+Product create and update require `name` (1–200 trimmed characters), `description` (up to 2,000 characters), `currency` (three letters, stored uppercase), `active` (boolean), and `categoryId` (existing ID). `imageUrl` is optional and at most 1,000 characters. On create, supply either top-level `sku` and `price` or a nonempty `variants` array. Combining both forms returns `400`. Top-level `inventoryQuantity` is optional and sets the default variant stock; if the default variant also supplies `inventoryQuantity`, the values must match. Other variants specify their own stock. Any omitted quantity on a new variant starts at `0` for compatibility with earlier requests.
 
 ### Update product fields or the default SKU and price
 
-`PUT` requires the product fields again. Omit `sku` and `price` to keep the default variant unchanged. Supply **both** to update it. Send other variant changes to the variant endpoint; a `variants` or `defaultVariantIndex` field in `PUT` returns `400`.
+`PUT` requires the product fields again. Omit `sku` and `price` to keep the default variant SKU and price unchanged. Supply **both** to update them. Top-level `inventoryQuantity`, when supplied, updates only the default variant stock; omit it to keep that stock unchanged. Send other variant changes to the variant endpoint; a `variants` or `defaultVariantIndex` field in `PUT` returns `400`.
 
 ```bash
 curl --fail-with-body -X PUT 'http://localhost:8081/api/products/4' \
@@ -255,12 +256,12 @@ curl --fail-with-body -X PUT 'http://localhost:8081/api/products/4' \
   -d '{"name":"Canvas Cap","description":"Cotton canvas cap","currency":"USD","inventoryQuantity":8,"active":true,"categoryId":2,"sku":"CAP-CANVAS-001","price":17.50}'
 ```
 
-Status: `200 OK`. The response is full product detail; its top-level `sku` and `price` now read from the updated default variant:
+Status: `200 OK`. The response is full product detail; its top-level `sku`, `price`, and `inventoryQuantity` now read from the updated default variant:
 
 ```json
-{"id": 4, "name": "Canvas Cap", "sku": "CAP-CANVAS-001", "price": 17.50,
+{"id": 4, "name": "Canvas Cap", "sku": "CAP-CANVAS-001", "price": 17.50, "inventoryQuantity": 8,
  "defaultVariantId": 4,
- "variants": [{"id": 4, "sku": "CAP-CANVAS-001", "price": 17.50, "active": true, "options": []}]}
+ "variants": [{"id": 4, "sku": "CAP-CANVAS-001", "price": 17.50, "active": true, "inventoryQuantity": 8, "options": []}]}
 ```
 
 This is an excerpt; the response also includes all other product fields and `category`.
@@ -274,6 +275,7 @@ Every variant request has:
 | `sku` | Yes | Nonblank, trimmed, at most 100 characters; unique across all products; case-sensitive |
 | `price` | Yes | Nonnegative number with at most 2 decimal places and at most 12 digits of precision |
 | `active` | Yes | Boolean |
+| `inventoryQuantity` | No | Nonnegative integer; new variants default to `0`, updates keep existing stock when omitted |
 | `options` | Yes | Array of `{name, value}` selections; `[]` for an optionless variant |
 
 Each option name and value must be nonblank. Names are at most 100 characters; values at most 200. Both are trimmed and lowercased, and entries are sorted by name in responses. Repeating an option name after normalization returns `400`. Repeating an entire normalized combination within the same product returns `409`, even with a new SKU.
@@ -283,13 +285,13 @@ Each option name and value must be nonblank. Names are at most 100 characters; v
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products/5/variants' \
   -H 'Content-Type: application/json' \
-  -d '{"sku":"TEE-GREEN-L","price":23.00,"active":true,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
+  -d '{"sku":"TEE-GREEN-L","price":23.00,"active":true,"inventoryQuantity":4,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
 ```
 
 Status: `201 Created`. The response is the **full updated product detail**, not a variant-only object. Its `variants` array now includes:
 
 ```json
-{"id": 9, "sku": "TEE-GREEN-L", "price": 23.00, "active": true,
+{"id": 9, "sku": "TEE-GREEN-L", "price": 23.00, "active": true, "inventoryQuantity": 4,
  "options": [{"name":"color","value":"green"},{"name":"size","value":"l"}]}
 ```
 
@@ -302,13 +304,13 @@ The `variantId` must belong to the product ID in the path. Send a complete varia
 ```bash
 curl --fail-with-body -X PUT 'http://localhost:8081/api/products/5/variants/9' \
   -H 'Content-Type: application/json' \
-  -d '{"sku":"TEE-GREEN-L","price":24.00,"active":false,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
+  -d '{"sku":"TEE-GREEN-L","price":24.00,"active":false,"inventoryQuantity":2,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
 ```
 
 Status: `200 OK`. The response is full updated product detail, including:
 
 ```json
-{"id": 9, "sku": "TEE-GREEN-L", "price": 24.00, "active": false,
+{"id": 9, "sku": "TEE-GREEN-L", "price": 24.00, "active": false, "inventoryQuantity": 2,
  "options": [{"name":"color","value":"green"},{"name":"size","value":"l"}]}
 ```
 
@@ -319,7 +321,7 @@ All examples below use `application/problem+json`. The `instance` value is the r
 | Request problem | Status | Typical `detail` |
 | --- | --- | --- |
 | `categoryId=abc`, invalid page/size/sort | `400` | Query-specific message; includes `parameter` and `rejectedValue` |
-| Blank SKU, negative price, missing options, duplicate option key, malformed JSON | `400` | Catalog validation message |
+| Blank SKU, negative price or inventory, missing options, duplicate option key, malformed JSON | `400` | Catalog validation message |
 | Missing product | `404` | `Product {id} was not found` |
 | Missing category or variant | `404` | `Category {id} was not found` or `Variant {id} was not found` |
 | Duplicate category slug | `409` | `Category slug already exists` |
@@ -358,4 +360,4 @@ Example unknown category on product creation:
 
 ## Current limit
 
-`inventoryQuantity` still belongs to the product and is shared by all variants. Per-variant inventory, stock reservation, cart, checkout, orders, and authentication are outside Week 1.
+V5 moves the previous product quantity to its default variant and starts any other existing variants at `0`, because their historical distribution is unknown. New and updated variants have independent quantities. Stock reservation, cart, checkout, orders, and authentication remain outside this work.

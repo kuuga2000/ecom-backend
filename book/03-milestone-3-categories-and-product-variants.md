@@ -1,6 +1,6 @@
 # Milestone 3: Categories and product variants
 
-This chapter records the Week 1 catalog change. A product is now the catalog page; a variant is the specific item with a SKU and price. Products have one primary category. The existing product list still works, and existing rows retain their SKUs and prices through a Flyway migration.
+This chapter records the original Week 1 catalog change. A later V5 migration adds per-variant stock; see the final section for the current inventory contract. A product is now the catalog page; a variant is the specific item with a SKU and price. Products have one primary category. The existing product list still works, and existing rows retain their SKUs and prices through a Flyway migration.
 
 Java 25 and Maven continue to run in Docker. This milestone does not add a frontend, cart, checkout, orders, authentication, or stock reservation.
 
@@ -14,7 +14,7 @@ Product  1 ──── many ProductVariants
 Product  1 ──── one default ProductVariant
 ```
 
-The tables now have these responsibilities:
+At V4, the tables had these responsibilities; V5 moves stock to variants as described in Section 10:
 
 | Table | Owns |
 | --- | --- |
@@ -280,6 +280,17 @@ Total:                8 passed, 0 failures, 0 errors, 0 skipped
 
 Live HTTP checks also confirmed migrated seed responses, category creation, a simple product, a two-variant product, category-filtered search, search by a nondefault variant SKU, and `409` for a duplicate normalized option combination.
 
-## 9. Week 1 boundary
+## 9. Original Week 1 boundary
 
 Inventory quantity still belongs to the product, so all variants share that count. This milestone does not introduce per-variant stock or reservation. It also leaves category trees and later commerce flows for future work.
+
+
+## 10. Follow-up: stock per variant (V5)
+
+After the original Week 1 implementation, stock moved from the product to each variant. [`V5__move_inventory_to_variants.sql`](../src/main/resources/db/migration/V5__move_inventory_to_variants.sql) adds a nonnegative `product_variants.inventory_quantity`, copies each product's old quantity to its default variant, initializes any other existing variants to `0`, and drops `products.inventory_quantity`. The migration cannot infer how a previously shared count was divided among nondefault variants, so those counts must be entered explicitly when known.
+
+Every variant detail now includes `inventoryQuantity`. The existing top-level product response field remains for compatibility and reads the **default variant's** quantity, just as top-level `sku` and `price` do. It is not the sum of every variant's stock. Product list rows therefore remain efficient: the already-fetched default variant supplies SKU, price, and stock.
+
+A new variant may specify its own nonnegative `inventoryQuantity` in `POST /api/products/{id}/variants`; omission starts it at `0` for older clients. In `PUT /api/products/{id}/variants/{variantId}`, omission preserves its current count. A product create or update request may still send top-level `inventoryQuantity` to set the default variant's stock. On create, if both the top-level value and default variant value are supplied, they must agree. The API guide has current examples for all four Red/Blue and S/M stock counts.
+
+The PostgreSQL-backed tests verify V4-to-V5 migration, preservation of the seeded stock counts, independent stock updates, and the absence of the old product stock column. This feature tracks quantities; it does not reserve or decrement stock for carts or orders.

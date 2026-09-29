@@ -26,7 +26,7 @@ src/main/resources/
 └── db/migration/                # Versioned Flyway SQL
 ```
 
-The catalog now has categories, products, and product variants. Products store catalog copy, currency, shared inventory quantity, active state, and audit timestamps; variants store SKU, price, options, and variant active state. Likely later tables are `customers`, `addresses`, `carts`, `cart_items`, `orders`, `order_items`, and `payments`.
+The catalog now has categories, products, and product variants. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `customers`, `addresses`, `carts`, `cart_items`, `orders`, `order_items`, and `payments`.
 
 Initial endpoints:
 
