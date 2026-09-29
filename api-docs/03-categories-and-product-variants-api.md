@@ -1,5 +1,7 @@
 # Categories and product variants API
 
+Catalog writes now require an ADMIN bearer token. Log in with a development admin account and set `ADMIN_TOKEN` to its `accessToken` before running the write examples; see [the authentication API](05-authentication-api.md).
+
 This is the Milestone 3 API reference, including the subsequent V5 variant-stock update. It covers category reads and writes, product creation and updates, variant creation and updates, and the additions to product search and detail. The original list and ID read examples remain in [Products API](products-api.md).
 
 Base URL for the supplied Compose configuration: `http://localhost:8081`. Successful responses use `application/json`. Errors use `application/problem+json`. Request examples use JSON and assume a fresh database; generated IDs and timestamps vary. Sections illustrate independent requests: later examples assume category 2 is still named `Apparel`, even if you tried the rename example.
@@ -87,6 +89,7 @@ All existing products were assigned to `uncategorized` by the V4 migration. `GET
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/categories' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"slug":"apparel","name":"Apparel"}'
 ```
@@ -103,6 +106,7 @@ Status: `201 Created`. Body:
 
 ```bash
 curl --fail-with-body -X PUT 'http://localhost:8081/api/categories/2' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Clothing"}'
 ```
@@ -207,6 +211,7 @@ Send the product fields plus a single `sku` and `price`. The service creates one
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Cap","description":"Cotton cap","currency":"USD","imageUrl":null,"inventoryQuantity":10,"active":true,"categoryId":2,"sku":"CAP-001","price":15.00}'
 ```
@@ -238,6 +243,7 @@ Send `variants` instead of top-level `sku` and `price`. `defaultVariantIndex` is
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"defaultVariantIndex":0,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"inventoryQuantity":20,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"inventoryQuantity":10,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"inventoryQuantity":8,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"inventoryQuantity":5,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
 ```
@@ -252,6 +258,7 @@ Product create and update require `name` (1–200 trimmed characters), `descript
 
 ```bash
 curl --fail-with-body -X PUT 'http://localhost:8081/api/products/4' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Canvas Cap","description":"Cotton canvas cap","currency":"USD","inventoryQuantity":8,"active":true,"categoryId":2,"sku":"CAP-CANVAS-001","price":17.50}'
 ```
@@ -284,6 +291,7 @@ Each option name and value must be nonblank. Names are at most 100 characters; v
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products/5/variants' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-GREEN-L","price":23.00,"active":true,"inventoryQuantity":4,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
 ```
@@ -303,6 +311,7 @@ The `variantId` must belong to the product ID in the path. Send a complete varia
 
 ```bash
 curl --fail-with-body -X PUT 'http://localhost:8081/api/products/5/variants/9' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-GREEN-L","price":24.00,"active":false,"inventoryQuantity":2,"options":[{"name":"Color","value":"Green"},{"name":"Size","value":"L"}]}'
 ```
@@ -332,6 +341,7 @@ Example duplicate option combination:
 
 ```bash
 curl --include -X POST 'http://localhost:8081/api/products/5/variants' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"sku":"TEE-RED-S-OTHER","price":21.00,"active":true,"options":[{"name":" size ","value":"s"},{"name":"COLOR","value":"RED"}]}'
 ```

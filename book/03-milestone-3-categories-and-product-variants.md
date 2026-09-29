@@ -1,5 +1,7 @@
 # Milestone 3: Categories and product variants
 
+Catalog writes now require an ADMIN bearer token. Set `ADMIN_TOKEN` to a development admin login token before running the write examples; see [the authentication API](../api-docs/05-authentication-api.md).
+
 This chapter records the original Week 1 catalog change. A later V5 migration adds per-variant stock; see the final section for the current inventory contract. A product is now the catalog page; a variant is the specific item with a SKU and price. Products have one primary category. The existing product list still works, and existing rows retain their SKUs and prices through a Flyway migration.
 
 Java 25 and Maven continue to run in Docker. This milestone does not add a frontend, cart, checkout, orders, authentication, or stock reservation.
@@ -169,6 +171,7 @@ These examples assume a fresh database. IDs and timestamps will differ elsewhere
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/categories' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"slug":"apparel","name":"Apparel"}'
 ```
@@ -179,6 +182,7 @@ curl --fail-with-body -X POST 'http://localhost:8081/api/categories' \
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Cap","description":"Cotton cap","currency":"USD","inventoryQuantity":10,"active":true,"categoryId":2,"sku":"CAP-001","price":15.00}'
 ```
@@ -201,6 +205,7 @@ curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
 
 ```bash
 curl --fail-with-body -X POST 'http://localhost:8081/api/products' \
+  -H "Authorization: Bearer $ADMIN_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"name":"Tee","description":"Cotton tee","currency":"USD","inventoryQuantity":20,"active":true,"categoryId":2,"variants":[{"sku":"TEE-RED-S","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"S"}]},{"sku":"TEE-RED-M","price":20.00,"active":true,"options":[{"name":"Color","value":"Red"},{"name":"Size","value":"M"}]},{"sku":"TEE-BLUE-S","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"S"}]},{"sku":"TEE-BLUE-M","price":22.00,"active":true,"options":[{"name":"Color","value":"Blue"},{"name":"Size","value":"M"}]}]}'
 ```
