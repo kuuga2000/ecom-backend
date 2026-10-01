@@ -1,6 +1,6 @@
 # Run the ecommerce backend with Docker
 
-Run these commands from the `ecom-backend/` directory. The project uses Java 25 and Maven **inside Docker**; the host needs Docker Engine, the Docker Compose plugin, and `curl` for the HTTP examples. The API listens on container port `8080`. The supplied Compose files publish it on host port `8081` by default.
+Run these commands from the `ecom-backend/` directory. The project uses Java 25 and Maven **inside Docker**; the host needs Docker Engine, the Docker Compose plugin, and `curl` for the HTTP examples. The API listens on container port `8080`. The supplied Compose files publish it on host port `8081` by default. Compose names the backend container `ecom-backend-api`; the isolated stack names its PostgreSQL container `ecom-backend-postgres`.
 
 Choose either the isolated Compose stack or the existing-database Compose stack for a run. Both files use the same Compose project name, so stop one before switching to the other.
 
