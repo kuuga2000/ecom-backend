@@ -1,6 +1,6 @@
 # Ecommerce backend
 
-Milestones 1 through 5 provide a Java 25 / Spring Boot 4.1.1 ecommerce REST API backed by PostgreSQL. Java and Maven run in Docker; no host JDK installation is needed.
+Milestones 1 through 6 provide a Java 25 / Spring Boot 4.1.1 ecommerce REST API backed by PostgreSQL. Java and Maven run in Docker; no host JDK installation is needed.
 
 Step-by-step walkthroughs:
 
@@ -11,7 +11,7 @@ Step-by-step walkthroughs:
 - [`book/05-milestone-4-customer-authentication.md`](book/05-milestone-4-customer-authentication.md)
 - [`book/06-milestone-5-customer-cart.md`](book/06-milestone-5-customer-cart.md)
 
-API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), [carts](api-docs/04-carts-api.md), [authentication](api-docs/05-authentication-api.md), [customer carts](api-docs/06-customer-cart-api.md), and the [complete API v1 route inventory](api-docs/07-api-versioning.md).
+API references: [product reads](api-docs/products-api.md), [categories, variants, and writes](api-docs/03-categories-and-product-variants-api.md), [carts](api-docs/04-carts-api.md), [authentication](api-docs/05-authentication-api.md), [customer carts](api-docs/06-customer-cart-api.md), [addresses and checkout](api-docs/08-checkout-api.md), and the [complete API v1 route inventory](api-docs/07-api-versioning.md).
 
 Docker commands and troubleshooting: [Docker guide](docker-docs/README.md).
 
@@ -27,13 +27,15 @@ src/main/java/com/example/ecom/
 ├── api/                         # Cross-feature HTTP concerns
 ├── auth/                        # Customer accounts and security
 ├── cart/                        # Anonymous and customer cart APIs
+├── address/                     # Owned customer addresses
+├── checkout/                    # Cart shipping snapshot, provider, and totals
 └── product/                     # Catalog API
 src/main/resources/
 ├── application.yaml
 └── db/migration/                # Versioned Flyway SQL
 ```
 
-The backend now has categories, products, product variants, anonymous carts, customer accounts, and authenticated customer carts. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Likely later tables are `addresses`, `orders`, `order_items`, and `payments`.
+The backend now has categories, products, product variants, anonymous carts, customer accounts, and authenticated customer carts. Products store catalog copy, currency, active state, and audit timestamps; variants store SKU, price, inventory quantity, options, and variant active state. Product-level `inventoryQuantity` in API responses is read from the default variant. Customer addresses and cart shipping snapshots support checkout preparation. Future tables include `orders`, `order_items`, and `payments`.
 
 Initial endpoints:
 
@@ -52,10 +54,10 @@ Proposed milestones:
 2. Product search, pagination, and sorting (implemented).
 3. Categories and product variants, with create/update operations (implemented).
 4. Customer authentication and authorization (implemented).
-5. Authenticated persistent carts (implemented); checkout and stock reservation remain planned.
-6. Orders and payment-provider integration.
-7. Observability, security hardening, integration tests, and deployment configuration.
-8. React storefront after the backend contract is ready.
+5. Authenticated persistent carts (implemented).
+6. Customer addresses, shipping methods, and checkout summary (implemented).
+7. Order creation, place order, and order history.
+8. Payment and inventory/stock workflow.
 
 ## Run it with the supplied existing database
 
