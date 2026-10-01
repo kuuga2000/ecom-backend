@@ -16,6 +16,23 @@ import java.net.URI;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(com.example.ecom.checkout.CheckoutException.class)
+    ProblemDetail handleCheckout(com.example.ecom.checkout.CheckoutException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());
+        problem.setTitle("Checkout request failed");
+        problem.setType(URI.create("https://example.com/problems/checkout"));
+        return problem;
+    }
+
+    @ExceptionHandler({org.springframework.web.bind.MethodArgumentNotValidException.class,
+            jakarta.validation.ConstraintViolationException.class})
+    ProblemDetail handleValidation(Exception exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, "Request fields failed validation");
+        problem.setTitle("Invalid request");
+        problem.setType(URI.create("https://example.com/problems/validation"));
+        return problem;
+    }
+
     @ExceptionHandler(AuthException.class)
     ProblemDetail handleAuth(AuthException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(exception.getStatus(), exception.getMessage());

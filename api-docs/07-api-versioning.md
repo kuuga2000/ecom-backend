@@ -36,3 +36,15 @@ Security matchers use the same new paths: authentication POST routes and catalog
 Use the versioned paths in every `curl` example in the [API guides](../README.md). Existing `/api/...` requests should be considered removed; update callers to `/api/v1/...`.
 
 Verification: the complete PostgreSQL-backed Maven suite ran with `mvn --batch-mode test` in the project's Java 25 Maven Docker image against an isolated database copy. Result: **21 tests, 0 failures, 0 errors, 0 skipped**. A live Docker smoke test confirmed public reads, protected customer/cart calls, and that an authenticated request to the former `/api/products` route returns `404`.
+
+## Milestone 6 additions
+
+The route inventory test also verifies the following authenticated endpoints. See
+the [checkout API guide](08-checkout-api.md) for request and response contracts.
+
+- `GET`, `POST /api/v1/customers/me/addresses`
+- `GET`, `PUT`, `DELETE /api/v1/customers/me/addresses/{id}`
+- `GET /api/v1/checkout`
+- `PUT /api/v1/checkout/shipping-address`
+- `GET /api/v1/checkout/shipping-methods`
+- `PUT /api/v1/checkout/shipping-method`
