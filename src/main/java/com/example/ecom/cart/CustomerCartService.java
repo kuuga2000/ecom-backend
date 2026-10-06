@@ -29,6 +29,17 @@ public class CustomerCartService {
                 BigDecimal.ZERO.setScale(2)) : response(rows.getFirst());
     }
 
+    @Transactional(readOnly = true)
+    public CustomerCartResponse requireCheckoutCart(long customerId) {
+        CustomerCartResponse cart = get(customerId);
+        if (cart.id() == null) throw new CartException(HttpStatus.NOT_FOUND, "Active cart was not found");
+        if (cart.items().isEmpty()) throw bad("Cart is empty");
+        for (CustomerCartItemResponse item : cart.items()) {
+            if (!item.purchasable()) throw new CartException(HttpStatus.CONFLICT, item.unavailableReason());
+        }
+        return cart;
+    }
+
     @Transactional
     public CustomerCartResponse add(long customerId, CartItemRequest request) {
         if (request == null || request.variantId() == null || request.variantId() <= 0)
@@ -135,7 +146,8 @@ public class CustomerCartService {
                     int quantity = rs.getInt(6);
                     BigDecimal price = rs.getBigDecimal(7);
                     String currency = rs.getString(8);
-                    String reason = !rs.getBoolean(9) ? "Product is inactive" :
+                    String reason = quantity <= 0 || quantity > MAX_LINE_QUANTITY ? "Cart line quantity must be from 1 to " + MAX_LINE_QUANTITY :
+                            !rs.getBoolean(9) ? "Product is inactive" :
                             !rs.getBoolean(10) ? "Variant is inactive" :
                             !currency.equals(cart.currency()) ? "Cart currency differs from product currency" :
                             quantity > rs.getInt(11) ? "Requested quantity exceeds variant stock" : null;
