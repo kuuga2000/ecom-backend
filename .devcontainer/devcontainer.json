@@ -1,17 +1,13 @@
 {
   "name": "Ecommerce backend (Java 25)",
-  "image": "maven:3.9.11-eclipse-temurin-25",
+  "dockerComposeFile": "compose.yaml",
+  "service": "workspace",
   "workspaceFolder": "/workspaces/ecom-backend",
-  "features": {
-    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {}
-  },
-  "postCreateCommand": [
-    "/bin/bash",
-    "-o",
-    "pipefail",
-    "-c",
-    "curl -fsSL https://chatgpt.com/codex/install.sh | CODEX_NON_INTERACTIVE=1 CODEX_INSTALL_DIR=/usr/local/bin sh"
-  ],
+  "remoteUser": "guosong",
+  "updateRemoteUserUID": false,
+  "overrideCommand": false,
+  "shutdownAction": "none",
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
   "customizations": {
     "vscode": {
       "extensions": [

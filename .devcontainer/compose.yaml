@@ -1,0 +1,22 @@
+name: ecom-backend-dev
+
+services:
+  workspace:
+    image: ecom-backend-dev-workspace:latest
+    pull_policy: never
+    init: true
+    command: sleep infinity
+    working_dir: /workspaces/ecom-backend
+    environment:
+      DOCKER_HOST: unix:///var/run/docker.sock
+    group_add:
+      - "${DOCKER_GID:-1001}"
+    volumes:
+      - ..:/workspaces/ecom-backend
+      - /var/run/docker.sock:/var/run/docker.sock
+      - maven-cache:/home/guosong/.m2
+      - codex-data:/home/guosong/.codex
+
+volumes:
+  maven-cache:
+  codex-data:
